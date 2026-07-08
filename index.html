@@ -54,6 +54,14 @@
             animation: flicker 1.8s infinite ease-in-out;
             transform-origin: bottom center;
         }
+        /* Sparkle animation for chat messages */
+        @keyframes sparkle-fade {
+            0% { transform: scale(0) translateY(0); opacity: 1; }
+            50% { transform: scale(1.5) translateY(-20px); opacity: 0.8; }
+            100% { transform: scale(0) translateY(-40px); opacity: 0; }
+        }
+        .user-bubble, .ai-bubble { position: relative; overflow: hidden; }
+        #chat-messages-container { scroll-behavior: smooth; }
         /* Spinning Cassette tape reels animation */
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -365,6 +373,11 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <!-- Download Chat Button -->
+                    <button id="download-chat-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition" title="Download Chat">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+
                     <!-- Developer API Key Settings Trigger Button -->
                     <button id="api-settings-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition" title="Set Gemini API Key">
                         <i class="fa-solid fa-gear"></i>
@@ -1549,12 +1562,13 @@
         }
 
         function appendMessageBubble(sender, text) {
+            chatHistory.push({ role: sender, text: text, time: new Date().toISOString() });
             const row = document.createElement('div');
-            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300`;
+            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300 mb-4`;
             
             if (sender === 'user') {
                 row.innerHTML = `
-                    <div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed">
+                    <div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed user-bubble">
                         ${escapeHTML(text)}
                     </div>
                 `;
@@ -1564,14 +1578,15 @@
                     <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
                         <i class="fa-solid fa-robot text-xs text-indigo-400"></i>
                     </div>
-                    <div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg">
+                    <div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg ai-bubble">
                         ${formattedText}
                     </div>
                 `;
             }
 
             chatMessages.appendChild(row);
-            document.getElementById('chat-anchor-bottom').scrollIntoView({ behavior: 'smooth' });
+            chatAnchor.scrollIntoView({ behavior: 'smooth' });
+            createMessageSparkles(row);
         }
 
         function parseMarkdownSimple(str) {
@@ -1595,6 +1610,46 @@
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;");
         }
+
+        let chatHistory = [];
+
+        function createMessageSparkles(el) {
+            for (let i = 0; i < 6; i++) {
+                const spark = document.createElement('span');
+                spark.className = 'absolute w-1.5 h-1.5 rounded-full pointer-events-none';
+                spark.style.background = ['#818cf8','#a78bfa','#6ee7b7','#34d399','#f472b6','#fbbf24'][i];
+                spark.style.left = (10 + Math.random() * 80) + '%';
+                spark.style.top = (10 + Math.random() * 80) + '%';
+                spark.style.animation = `sparkle-fade ${0.6 + Math.random() * 0.8}s ease-out forwards`;
+                el.appendChild(spark);
+                setTimeout(() => spark.remove(), 1500);
+            }
+        }
+
+        function downloadChat() {
+            if (chatHistory.length === 0) {
+                const noChat = document.createElement('div');
+                noChat.className = 'flex justify-start items-start gap-3 mb-4';
+                noChat.innerHTML = '<div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-robot text-xs text-indigo-400"></i></div><div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm shadow-lg">No messages to download yet. Start a conversation!</div>';
+                chatMessages.appendChild(noChat);
+                chatAnchor.scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+            let chatText = "Focus & AI Library Hub - Chat Export\n";
+            chatText += "====================================\n\n";
+            chatHistory.forEach(msg => {
+                chatText += `[${msg.role.toUpperCase()}] ${msg.text}\n\n`;
+            });
+            chatText += "--- End of Chat ---\n";
+            const blob = new Blob([chatText], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `focus-hub-chat-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        document.getElementById('download-chat-btn').addEventListener('click', downloadChat);
 
         function appendTypingIndicator() {
             const row = document.createElement('div');
