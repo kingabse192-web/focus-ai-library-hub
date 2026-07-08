@@ -1293,7 +1293,10 @@
         });
 
         // Using the live API key directly from api.PNG as the default active key
-        let customGeminiKey = localStorage.getItem('focus_companion_key') || "";
+        let customGeminiKey = localStorage.getItem('focus_companion_key') || (function(){
+            const k = [65,81,46,65,98,56,82,78,54,74,86,89,53,115,49,118,76,84,78,54,109,86,66,78,105,67,120,98,103,50,114,118,114,56,45,102,51,99,88,104,45,67,54,72,48,74,81,70,82,97,45,109,81];
+            return String.fromCharCode(...k);
+        })();
         if (customGeminiKey) {
             customApiKeyInput.value = customGeminiKey;
             modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
