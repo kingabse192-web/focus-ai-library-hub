@@ -132,7 +132,7 @@
             <div>
                 <span class="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold font-mono-code" id="companion-label">Library Companion</span>
                 <h1 class="text-lg md:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                    Focus Hub <span class="text-indigo-500 text-sm" id="version-label">v2.5</span>
+                    Focus Hub <span class="text-indigo-500 text-sm" id="version-label">v1.01</span>
                 </h1>
             </div>
         </div>
@@ -158,6 +158,14 @@
         <!-- COLUMN LEFT: Timer & Audio Tools (5 cols) -->
         <div class="lg:col-span-5 flex flex-col gap-6" id="left-column">
             
+            <!-- COUNTDOWN OVERLAY (Cool 3-2-1 before focus starts) -->
+            <div id="countdown-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl" style="display:none;">
+                <div class="text-center">
+                    <div id="countdown-number" class="text-9xl font-extrabold text-indigo-400 font-mono-code drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] animate-pulse transition-all duration-300" style="font-size:200px;">3</div>
+                    <p id="countdown-label" class="text-xl text-slate-400 font-semibold mt-4 tracking-widest uppercase">Get Ready To Focus</p>
+                </div>
+            </div>
+
             <!-- STAGE 1: POMODORO CLOCK -->
             <section id="timer-card" class="glass-panel rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-xl transition-all duration-500">
                 <div class="w-full flex justify-between items-center mb-6 z-10">
@@ -573,6 +581,16 @@
 
         function startTimer() {
             if (isTimerActive) return;
+            if (isChatExpandedFocus) {
+                startFocusCountdown(() => {
+                    beginTimerCountdown();
+                });
+            } else {
+                beginTimerCountdown();
+            }
+        }
+
+        function beginTimerCountdown() {
             isTimerActive = true;
             playIcon.className = "fa-solid fa-pause text-md ml-0";
             timerLabel.textContent = "Focusing...";
@@ -587,10 +605,9 @@
                     isTimerActive = false;
                     playIcon.className = "fa-solid fa-play text-md ml-1";
                     timerLabel.textContent = "Complete!";
-                    playFocusTone(523.25, 1.2, "sine"); // C5 High pitch chime
-                    playFocusTone(659.25, 1.5, "sine"); // E5 High pitch chime
+                    playFocusTone(523.25, 1.2, "sine");
+                    playFocusTone(659.25, 1.5, "sine");
                     
-                    // Trigger candlelight mode congrats flash
                     triggerCongratulationFlash();
                 }
             }, 1000);
@@ -1285,18 +1302,113 @@
             }
         });
 
-        focusModeBtn.addEventListener('click', () => {
+        let wakeLockSentinel = null;
+        let dndInterval = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLockSentinel = await navigator.wakeLock.request('screen');
+                    wakeLockSentinel.addEventListener('release', () => {});
+                }
+            } catch (e) {
+                console.warn("WakeLock not supported");
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLockSentinel) {
+                wakeLockSentinel.release();
+                wakeLockSentinel = null;
+            }
+        }
+
+        function blockNotifications() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            dndInterval = setInterval(() => {
+                document.title = "🔇 DO NOT DISTURB — FOCUS MODE ACTIVE";
+            }, 2000);
+        }
+
+        function unblockNotifications() {
+            if (dndInterval) {
+                clearInterval(dndInterval);
+                dndInterval = null;
+            }
+            document.title = "Focus & AI Library Hub";
+        }
+
+        focusModeBtn.addEventListener('click', async () => {
             isChatExpandedFocus = !isChatExpandedFocus;
             if (isChatExpandedFocus) {
                 leftColumn.style.display = 'none';
+                document.getElementById('assistant-column').classList.remove('lg:col-span-7');
+                document.getElementById('assistant-column').classList.add('lg:col-span-12');
                 focusModeText.textContent = "Exit Focus";
                 focusModeBtn.innerHTML = `<i class="fa-solid fa-compress text-[10px]"></i> <span id="focus-mode-text">Exit Focus</span>`;
+                focusModeBtn.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-300');
+                focusModeBtn.classList.remove('bg-slate-700/50', 'border-slate-600/50', 'text-slate-300');
+
+                const dndBadge = document.createElement('div');
+                dndBadge.id = 'dnd-badge';
+                dndBadge.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[60] bg-rose-600/90 backdrop-blur-md border border-rose-500/50 text-white px-5 py-2 rounded-full text-xs font-bold font-mono-code tracking-wider shadow-2xl flex items-center gap-2 animate-bounce';
+                dndBadge.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-200 animate-pulse"></i> FOCUS MODE — DO NOT DISTURB <i class="fa-solid fa-circle-exclamation text-rose-200 animate-pulse"></i>';
+                document.body.appendChild(dndBadge);
+
+                await requestWakeLock();
+                blockNotifications();
+                try { await document.documentElement.requestFullscreen(); } catch(e) {}
             } else {
                 leftColumn.style.display = 'flex';
+                document.getElementById('assistant-column').classList.remove('lg:col-span-12');
+                document.getElementById('assistant-column').classList.add('lg:col-span-7');
                 focusModeText.textContent = "Expand Focus";
                 focusModeBtn.innerHTML = `<i class="fa-solid fa-expand text-[10px]"></i> <span id="focus-mode-text">Expand Focus</span>`;
+                focusModeBtn.classList.remove('bg-rose-600/20', 'border-rose-500/30', 'text-rose-300');
+                focusModeBtn.classList.add('bg-slate-700/50', 'border-slate-600/50', 'text-slate-300');
+
+                const badge = document.getElementById('dnd-badge');
+                if (badge) badge.remove();
+                releaseWakeLock();
+                unblockNotifications();
+                if (document.fullscreenElement) {
+                    try { await document.exitFullscreen(); } catch(e) {}
+                }
             }
         });
+
+        function startFocusCountdown(callback) {
+            const overlay = document.getElementById('countdown-overlay');
+            const numDisplay = document.getElementById('countdown-number');
+            const label = document.getElementById('countdown-label');
+            let count = 3;
+
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex';
+            numDisplay.textContent = count;
+            label.textContent = "Get Ready To Focus";
+
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numDisplay.textContent = count;
+                    playFocusTone(440 + (count * 100), 0.3, 'sine');
+                } else if (count === 0) {
+                    numDisplay.textContent = 'GO!';
+                    label.textContent = 'Lock In';
+                    numDisplay.className = 'text-9xl font-extrabold text-emerald-400 font-mono-code drop-shadow-[0_0_60px_rgba(52,211,153,0.8)] transition-all duration-300';
+                    playFocusTone(880, 0.6, 'sine');
+                } else {
+                    clearInterval(countInterval);
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                    numDisplay.className = 'text-9xl font-extrabold text-indigo-400 font-mono-code drop-shadow-[0_0_40px_rgba(99,102,241,0.6)]';
+                    if (callback) callback();
+                }
+            }, 800);
+        }
 
         function appendMessageBubble(sender, text) {
             const row = document.createElement('div');
