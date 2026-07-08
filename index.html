@@ -158,11 +158,22 @@
         <!-- COLUMN LEFT: Timer & Audio Tools (5 cols) -->
         <div class="lg:col-span-5 flex flex-col gap-6" id="left-column">
             
-            <!-- COUNTDOWN OVERLAY (Cool 3-2-1 before focus starts) -->
-            <div id="countdown-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl" style="display:none;">
-                <div class="text-center">
-                    <div id="countdown-number" class="text-9xl font-extrabold text-indigo-400 font-mono-code drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] animate-pulse transition-all duration-300" style="font-size:200px;">3</div>
-                    <p id="countdown-label" class="text-xl text-slate-400 font-semibold mt-4 tracking-widest uppercase">Get Ready To Focus</p>
+            <!-- COUNTDOWN OVERLAY (Attractive 3-2-1 before focus starts) -->
+            <div id="countdown-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-slate-950 via-indigo-950/90 to-slate-950 backdrop-blur-2xl" style="display:none;">
+                <canvas id="countdown-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+                <div class="text-center relative z-10">
+                    <svg class="w-72 h-72 mx-auto -rotate-90 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" id="countdown-ring-svg">
+                        <circle id="countdown-ring-bg" class="text-slate-800/60" stroke-width="4" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"/>
+                        <circle id="countdown-ring-fg" class="text-indigo-500 drop-shadow-[0_0_30px_rgba(99,102,241,0.8)]" stroke-width="6" stroke-linecap="round" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"
+                            style="stroke-dasharray: 816.8; stroke-dashoffset: 0; transition: stroke-dashoffset 0.7s ease-out;"/>
+                    </svg>
+                    <div id="countdown-number" class="text-[220px] font-extrabold font-mono-code text-transparent bg-clip-text bg-gradient-to-b from-indigo-300 via-indigo-400 to-indigo-600 drop-shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all duration-200 select-none" style="line-height:1;">3</div>
+                    <p id="countdown-label" class="text-lg text-indigo-300/70 font-semibold mt-2 tracking-[0.3em] uppercase">Prepare To Focus</p>
+                    <div class="flex gap-2 justify-center mt-6">
+                        <span class="countdown-dot w-2 h-2 rounded-full bg-indigo-500/50"></span>
+                        <span class="countdown-dot w-2 h-2 rounded-full bg-indigo-500/30"></span>
+                        <span class="countdown-dot w-2 h-2 rounded-full bg-indigo-500/10"></span>
+                    </div>
                 </div>
             </div>
 
@@ -1383,31 +1394,155 @@
             const overlay = document.getElementById('countdown-overlay');
             const numDisplay = document.getElementById('countdown-number');
             const label = document.getElementById('countdown-label');
+            const ringFg = document.getElementById('countdown-ring-fg');
+            const dots = document.querySelectorAll('.countdown-dot');
+            const canvas = document.getElementById('countdown-canvas');
+            const ctx = canvas.getContext('2d');
             let count = 3;
+            let particles = [];
+            const ringCircum = 816.8;
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
             overlay.classList.remove('hidden');
             overlay.style.display = 'flex';
             numDisplay.textContent = count;
-            label.textContent = "Get Ready To Focus";
+            numDisplay.style.transform = 'scale(1)';
+            label.textContent = "Prepare To Focus";
+            ringFg.style.strokeDashoffset = '0';
+            ringFg.style.stroke = '#818cf8';
+
+            function createParticles(x, y, color) {
+                for (let i = 0; i < 30; i++) {
+                    const angle = (Math.PI * 2 / 30) * i;
+                    const speed = 4 + Math.random() * 6;
+                    particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1,
+                        size: 3 + Math.random() * 5,
+                        color
+                    });
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles = particles.filter(p => p.life > 0);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.1;
+                    p.life -= 0.02;
+                    p.size *= 0.98;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+                if (particles.length > 0) requestAnimationFrame(animateParticles);
+            }
+
+            const colors = ['#818cf8', '#a78bfa', '#6ee7b7', '#34d399'];
+            const ringColors = ['#818cf8', '#a78bfa', '#6ee7b7', '#34d399'];
+            const labels = ['Prepare To Focus', 'Get Ready...', 'Almost There!', 'Lock In!'];
 
             const countInterval = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    numDisplay.textContent = count;
-                    playFocusTone(440 + (count * 100), 0.3, 'sine');
-                } else if (count === 0) {
-                    numDisplay.textContent = 'GO!';
-                    label.textContent = 'Lock In';
-                    numDisplay.className = 'text-9xl font-extrabold text-emerald-400 font-mono-code drop-shadow-[0_0_60px_rgba(52,211,153,0.8)] transition-all duration-300';
-                    playFocusTone(880, 0.6, 'sine');
-                } else {
-                    clearInterval(countInterval);
-                    overlay.classList.add('hidden');
-                    overlay.style.display = 'none';
-                    numDisplay.className = 'text-9xl font-extrabold text-indigo-400 font-mono-code drop-shadow-[0_0_40px_rgba(99,102,241,0.6)]';
-                    if (callback) callback();
-                }
-            }, 800);
+                const step = 3 - count;
+                const progress = (step + 1) / 3;
+                ringFg.style.strokeDashoffset = String(ringCircum - (ringCircum * progress));
+
+                setTimeout(() => {
+                    numDisplay.style.transform = 'scale(1.6)';
+                    numDisplay.style.opacity = '0';
+                }, 100);
+                setTimeout(() => {
+                    count--;
+                    if (count > 0) {
+                        const colorIdx = 3 - count;
+                        numDisplay.textContent = count;
+                        numDisplay.style.background = `linear-gradient(to bottom, ${colors[colorIdx]}88, ${colors[colorIdx]})`;
+                        numDisplay.style.webkitBackgroundClip = 'text';
+                        numDisplay.style.backgroundClip = 'text';
+                        numDisplay.style.transform = 'scale(0.3)';
+                        numDisplay.style.opacity = '1';
+                        ringFg.style.stroke = ringColors[colorIdx];
+                        label.textContent = labels[colorIdx] || "Focus...";
+
+                        createParticles(canvas.width / 2, canvas.height / 2, colors[colorIdx]);
+                        animateParticles();
+                        playFocusTone(400 + (count * 120), 0.25, 'sine');
+
+                        dots.forEach((d, i) => {
+                            d.style.background = i < (3 - count) ? colors[colorIdx] : 'rgba(99,102,241,0.2)';
+                            d.style.transform = i < (3 - count) ? 'scale(1.5)' : 'scale(1)';
+                            d.style.transition = 'all 0.3s ease';
+                        });
+
+                        setTimeout(() => {
+                            numDisplay.style.transform = 'scale(1)';
+                        }, 150);
+                    } else if (count === 0) {
+                        numDisplay.textContent = 'GO!';
+                        numDisplay.style.background = 'linear-gradient(to bottom, #6ee7b7, #34d399)';
+                        numDisplay.style.webkitBackgroundClip = 'text';
+                        numDisplay.style.backgroundClip = 'text';
+                        numDisplay.style.transform = 'scale(1.8)';
+                        numDisplay.style.opacity = '1';
+                        ringFg.style.stroke = '#34d399';
+                        ringFg.style.strokeDashoffset = '0';
+                        label.textContent = 'Lock In!';
+                        overlay.style.transition = 'all 0.5s ease';
+                        overlay.style.backgroundColor = 'rgba(52,211,153,0.15)';
+
+                        createParticles(canvas.width / 2, canvas.height / 2, '#34d399');
+                        createParticles(canvas.width / 2, canvas.height / 2, '#6ee7b7');
+                        animateParticles();
+                        playFocusTone(880, 0.5, 'sine');
+                        setTimeout(() => playFocusTone(1108, 0.4, 'sine'), 200);
+
+                        dots.forEach(d => {
+                            d.style.background = '#34d399';
+                            d.style.transform = 'scale(2)';
+                            d.style.boxShadow = '0 0 15px rgba(52,211,153,0.6)';
+                        });
+
+                        setTimeout(() => {
+                            numDisplay.style.transform = 'scale(0.1)';
+                            numDisplay.style.opacity = '0';
+                        }, 600);
+                    } else {
+                        clearInterval(countInterval);
+                        overlay.style.transition = 'all 0.8s ease';
+                        overlay.style.opacity = '0';
+                        particles = [];
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        setTimeout(() => {
+                            overlay.classList.add('hidden');
+                            overlay.style.display = 'none';
+                            overlay.style.opacity = '1';
+                            overlay.style.backgroundColor = 'transparent';
+                            numDisplay.style.transform = 'scale(1)';
+                            numDisplay.style.opacity = '1';
+                            numDisplay.className = 'text-[220px] font-extrabold font-mono-code text-transparent bg-clip-text bg-gradient-to-b from-indigo-300 via-indigo-400 to-indigo-600 drop-shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all duration-200 select-none';
+                            ringFg.style.stroke = '#818cf8';
+                            dots.forEach(d => {
+                                d.style.background = 'rgba(99,102,241,0.2)';
+                                d.style.transform = 'scale(1)';
+                                d.style.boxShadow = 'none';
+                            });
+                            if (callback) callback();
+                        }, 800);
+                    }
+                }, 350);
+            }, 1200);
         }
 
         function appendMessageBubble(sender, text) {
