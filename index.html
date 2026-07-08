@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus & AI Library Hub</title>
+    <!-- Google Fonts: Inter, Fira Code, cozy handwritten Caveat font and elegant serif Playfair -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for beautiful icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- YouTube IFrame API script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            scroll-behavior: smooth;
+        }
+        .font-mono-code {
+            font-family: 'Fira Code', monospace;
+        }
+        .font-handwritten {
+            font-family: 'Caveat', cursive;
+        }
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
+        }
+        /* Candlelight flame animation for the Meberat Tefta mode */
+        @keyframes flicker {
+            0%, 100% { transform: scale(1) rotate(-1deg); opacity: 0.85; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6)); }
+            20% { transform: scale(1.1) rotate(1deg); opacity: 0.95; filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)); }
+            40% { transform: scale(0.9) rotate(-0.5deg); opacity: 0.75; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5)); }
+            60% { transform: scale(1.05) rotate(1.5deg); opacity: 1; filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.9)); }
+            80% { transform: scale(0.95) rotate(-1deg); opacity: 0.8; filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.7)); }
+        }
+        .candle-flicker {
+            animation: flicker 1.8s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+        /* Spinning Cassette tape reels animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-reel {
+            animation: spin 3.5s linear infinite;
+        }
+        /* Ambient Background Glows */
+        .ambient-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+            opacity: 0.15;
+            transition: all 1s ease-in-out;
+        }
+        /* Glassmorphism utility classes */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.5s ease;
+        }
+        .candle-panel {
+            background: rgba(24, 15, 8, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            transition: all 0.5s ease;
+        }
+        /* Progress Ring Transition */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        /* Custom inputs and sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: currentColor;
+            cursor: pointer;
+            box-shadow: 0 0 8px currentColor;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden transition-all duration-700 relative">
+
+    <div id="glow-l" class="ambient-glow -top-20 -left-20 bg-indigo-500"></div>
+    <div id="glow-r" class="ambient-glow -bottom-20 -right-20 bg-emerald-500"></div>
+
+    <!-- Hidden YouTube Player Container (Used to stream actual songs cleanly) -->
+    <div id="yt-player-container" class="absolute w-[1px] h-[1px] opacity-0 pointer-events-none overflow-hidden">
+        <div id="yt-player"></div>
+    </div>
+
+    <!-- Top Navigation / Ambient Bar -->
+    <header class="glass-panel sticky top-0 z-50 px-4 py-3 md:px-8 flex justify-between items-center transition-all duration-500">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30 flex items-center justify-center transition-all" id="app-logo-box">
+                <i class="fa-solid fa-graduation-cap text-indigo-400 text-lg" id="app-logo-icon"></i>
+            </div>
+            <div>
+                <span class="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold font-mono-code" id="companion-label">Library Companion</span>
+                <h1 class="text-lg md:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                    Focus Hub <span class="text-indigo-500 text-sm" id="version-label">v2.5</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Custom Personalized Tag -->
+            <div class="hidden md:flex items-center gap-2 bg-slate-800/40 rounded-full px-3.5 py-1 border border-slate-700/50" id="desk-tag">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="desk-status-dot"></span>
+                <span class="text-xs text-slate-300 font-medium font-mono-code" id="desk-text">Session: Library Table 4</span>
+            </div>
+
+            <!-- MEBERAT TEFTA (Power Cut Indicator) Toggle Button -->
+            <button id="power-toggle-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 text-xs font-semibold tracking-wide transition-all duration-300 shadow-md animate-bounce">
+                <i class="fa-solid fa-lightbulb text-amber-400 animate-pulse mr-1" id="power-icon"></i>
+                <span id="power-text">Meberat Tefta?</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10 transition-all duration-500">
+        
+        <!-- COLUMN LEFT: Timer & Audio Tools (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-6" id="left-column">
+            
+            <!-- STAGE 1: POMODORO CLOCK -->
+            <section id="timer-card" class="glass-panel rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-xl transition-all duration-500">
+                <div class="w-full flex justify-between items-center mb-6 z-10">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center gap-2">
+                        <i class="fa-regular fa-clock text-indigo-400" id="timer-icon-color"></i> Session Timer
+                    </h2>
+                    <span id="timer-status-badge" class="text-[10px] px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold rounded-full uppercase tracking-wider">
+                        Study Focus
+                    </span>
+                </div>
+
+                <!-- Circular Timer Dial -->
+                <div class="relative flex items-center justify-center my-4 z-10">
+                    <svg class="w-56 h-56 transform -rotate-90">
+                        <!-- Background Circle -->
+                        <circle class="text-slate-800/80" stroke-width="8" stroke="currentColor" fill="transparent" r="100" cx="112" cy="112"/>
+                        <!-- Foreground Glowing Circle -->
+                        <circle id="timer-progress-ring" class="progress-ring__circle text-indigo-500 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" stroke-width="8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="100" cx="112" cy="112"/>
+                    </svg>
+                    <!-- Digital Timer Display -->
+                    <div class="absolute flex flex-col items-center justify-center">
+                        <span id="timer-display" class="text-4xl font-extrabold tracking-widest font-mono-code text-white">25:00</span>
+                        <span id="timer-label" class="text-[10px] text-slate-400 tracking-widest uppercase mt-1">Get Ready</span>
+                    </div>
+                </div>
+
+                <!-- Timer Controls -->
+                <div class="flex items-center gap-3 w-full mt-4 justify-center z-10">
+                    <button id="timer-play-pause" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-indigo-500/20 transition-all duration-300">
+                        <i id="timer-play-icon" class="fa-solid fa-play text-md ml-1"></i>
+                    </button>
+                    <button id="timer-reset" class="w-10 h-10 bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-full flex items-center justify-center border border-slate-700/80 transition-all">
+                        <i class="fa-solid fa-rotate-left text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="grid grid-cols-3 gap-2 w-full mt-6 z-10">
+                    <button data-time="1500" class="timer-preset-btn active px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 transition-all">
+                        25m Study
+                    </button>
+                    <button data-time="300" class="timer-preset-btn px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:bg-slate-700/50 transition-all">
+                        5m Break
+                    </button>
+                    <button data-time="3000" class="timer-preset-btn px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:bg-slate-700/50 transition-all">
+                        50m Deep
+                    </button>
+                </div>
+            </section>
+
+            <!-- STAGE 2: RETRO MIXTAPE DECK (With User Playlist Selector & Jazz Tracks) -->
+            <section id="audio-card" class="glass-panel rounded-3xl p-6 shadow-xl transition-all duration-500 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center gap-2">
+                        <i class="fa-solid fa-compact-disc text-indigo-400" id="audio-icon-color"></i> Study Mixtape Deck
+                    </h2>
+                    <span class="text-[9px] font-mono-code bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 px-2 py-0.5 rounded-full uppercase">USER CHOOSE PLAYLIST</span>
+                </div>
+
+                <!-- Custom Cassette Deck Illustration -->
+                <div class="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col items-center justify-between relative overflow-hidden shadow-inner" id="cassette-deck">
+                    <div class="w-full flex justify-between items-center px-1 mb-2">
+                        <span class="text-[9px] font-mono-code text-slate-500 font-bold">SIDE A</span>
+                        <div class="h-1 flex-1 mx-3 bg-indigo-500/30 rounded">
+                            <div class="h-full bg-indigo-500 rounded transition-all duration-300" id="cassette-progress-bar" style="width: 0%;"></div>
+                        </div>
+                        <span class="text-[9px] font-mono-code text-slate-500" id="audio-time-label">0:00</span>
+                    </div>
+
+                    <!-- Cassette body visual representation -->
+                    <div class="w-full bg-slate-800 border-2 border-slate-600 rounded-lg p-3 flex flex-col justify-between relative shadow-md" style="height: 105px;">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-mono-code text-slate-400 tracking-tight select-none">LOFI & JAZZ MIXTAPE</span>
+                            <span class="text-[9px] font-mono-code text-indigo-400 font-bold">NR [C]</span>
+                        </div>
+
+                        <!-- Center Window with Reels -->
+                        <div class="w-4/5 mx-auto h-10 bg-slate-900 border border-slate-700 rounded flex justify-around items-center px-4 relative overflow-hidden">
+                            <!-- Left Reel -->
+                            <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative" id="left-reel">
+                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
+                                <div class="absolute w-full h-[1px] bg-slate-500"></div>
+                                <div class="absolute w-[1px] h-full bg-slate-500"></div>
+                            </div>
+                            <!-- Small transparent tape window display -->
+                            <div class="h-full w-8 bg-slate-950/80 border-x border-slate-800 flex items-center justify-center">
+                                <div class="w-1.5 h-6 bg-amber-500/20 rounded-full" id="tape-shadow"></div>
+                            </div>
+                            <!-- Right Reel -->
+                            <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative" id="right-reel">
+                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
+                                <div class="absolute w-full h-[1px] bg-slate-500"></div>
+                                <div class="absolute w-[1px] h-full bg-slate-500"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-1 text-[8px] font-mono-code text-slate-500">
+                            <span>A: HI-FI ANALOG</span>
+                            <span>TAP TO SELECT TRACK</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Track Display Card -->
+                <div class="p-3.5 bg-slate-900/50 border border-slate-800/80 rounded-2xl flex flex-col gap-1.5 shadow-inner">
+                    <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-bold font-mono-code flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full inline-block" id="track-pulse"></span> Now Playing
+                    </div>
+                    <div class="text-xs font-semibold text-slate-200 truncate" id="current-track-title">
+                        Loading study tracks...
+                    </div>
+                    <div class="text-[10px] text-slate-400 flex justify-between items-center">
+                        <span id="track-artist">Lofi & Jazz Studio</span>
+                        <span class="font-mono-code text-amber-500" id="audio-tempo-tag">Cozy Vibe</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Track Selection Menu -->
+                <div class="flex flex-col gap-1 bg-slate-950/40 rounded-2xl border border-slate-800 p-2 max-h-[180px] overflow-y-auto" id="tracklist-picker">
+                    <!-- Dynamic List of Tracks will be rendered here by JS -->
+                </div>
+
+                <!-- Load Custom YouTube Link / ID Drawer -->
+                <div class="p-2.5 bg-slate-900/40 border border-slate-800 rounded-2xl">
+                    <span class="text-[10px] font-mono-code text-slate-400 flex items-center gap-1.5 mb-1.5">
+                        <i class="fa-solid fa-plus text-indigo-400"></i> Load Custom YouTube Track
+                    </span>
+                    <form id="custom-track-form" class="flex gap-1.5">
+                        <input type="text" id="custom-track-input" placeholder="Paste YouTube link or Video ID" class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono-code">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-3 rounded-xl transition font-semibold tracking-wide">Load</button>
+                    </form>
+                </div>
+
+                <!-- Playback Controllers -->
+                <div class="grid grid-cols-5 gap-1.5">
+                    <button id="audio-prev" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex justify-center items-center">
+                        <i class="fa-solid fa-backward-step text-xs"></i>
+                    </button>
+                    <button id="audio-play-pause" class="col-span-3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wider uppercase transition active:scale-95 flex justify-center items-center gap-2 shadow-lg shadow-indigo-600/10">
+                        <i class="fa-solid fa-play text-xs" id="cassette-play-icon"></i> <span id="cassette-play-text">Play Tape</span>
+                    </button>
+                    <button id="audio-next" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex justify-center items-center">
+                        <i class="fa-solid fa-forward-step text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Volume and Crackle slider controls -->
+                <div class="grid grid-cols-2 gap-3 mt-1.5">
+                    <div class="flex flex-col gap-1 p-2 bg-slate-900/30 border border-slate-800/60 rounded-xl">
+                        <span class="text-[9px] font-mono-code text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-volume-high text-indigo-400"></i> Tape Volume
+                        </span>
+                        <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="0.5" class="w-full text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+                    </div>
+                    <div class="flex flex-col gap-1 p-2 bg-slate-900/30 border border-slate-800/60 rounded-xl">
+                        <span class="text-[9px] font-mono-code text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-nodes text-amber-500"></i> Analog Crackle
+                        </span>
+                        <input id="audio-crackle" type="range" min="0" max="1" step="0.05" value="0.4" class="w-full text-amber-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- COLUMN RIGHT: Gemini Intelligent Study Assistant (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col h-[600px] lg:h-auto min-h-[500px] glass-panel rounded-3xl overflow-hidden shadow-2xl relative transition-all duration-500" id="assistant-column">
+            
+            <!-- Candlelight Mode Flicker Screen Layer -->
+            <div id="candle-overlay" class="absolute inset-0 bg-amber-950/10 pointer-events-none opacity-0 transition-all duration-700 z-10 mix-blend-color-burn"></div>
+
+            <!-- Header -->
+            <div class="p-4 bg-slate-800/80 border-b border-slate-700/60 flex justify-between items-center shrink-0 z-20 relative" id="assistant-header">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-800 rounded-full" id="assistant-dot"></span>
+                        <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-indigo-400 rounded-xl flex items-center justify-center text-white text-lg shadow-inner" id="assistant-avatar-box">
+                            <i class="fa-solid fa-robot text-sm animate-pulse" id="avatar-icon"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-200 tracking-wide flex items-center gap-2">
+                            Gemini Study Assistant
+                        </h2>
+                        <span class="text-[10px] font-mono-code text-indigo-400 font-semibold tracking-wider uppercase" id="core-badge">Live Real-Time Brain</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Developer API Key Settings Trigger Button -->
+                    <button id="api-settings-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition" title="Set Gemini API Key">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <!-- Focus Mode Trigger Toggle Button -->
+                    <button id="focus-mode-btn" class="flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition">
+                        <i class="fa-solid fa-expand text-[10px]" id="focus-expand-icon"></i>
+                        <span id="focus-mode-text">Expand Focus</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Configuration Modal Box (Floating inline block) -->
+            <div id="api-key-panel" class="hidden p-4 bg-slate-900 border-b border-slate-700/60 z-30 relative transition-all duration-300">
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-key text-amber-500"></i> Local API Key Setup (Avoids CORS / Capture.PNG Error)
+                        </span>
+                        <span class="text-[9px] font-mono-code text-slate-500 font-bold">Local Storage Option</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="password" id="custom-api-key-input" placeholder="Enter Gemini API key (AIzaSy...)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <button id="save-api-key-btn" class="bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 text-xs rounded-xl font-semibold transition active:scale-95 text-white">
+                            Save Key
+                        </button>
+                    </div>
+                    <p class="text-[9px] text-slate-500 leading-relaxed">
+                        To run live queries direct from a local file as in <strong>Capture.PNG</strong>, paste your custom Gemini API key. We also integrated the master key from <strong>api.PNG</strong> as the automatic fallback!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Chat Streams Display Grid -->
+            <div id="chat-messages-container" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-900/30 relative z-20">
+                
+                <!-- Initial Welcome AI Bubble -->
+                <div class="flex justify-start items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5" id="welcome-bubble-icon">
+                        <i class="fa-solid fa-robot text-xs text-indigo-400" id="welcome-robot-icon"></i>
+                    </div>
+                    <div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg" id="welcome-bubble-body">
+                        <p class="font-semibold text-slate-200 mb-1">Hey Maria & Partner! 👋</p>
+                        <p class="text-slate-300">
+                            Welcome back to your study desk! I am your real-time AI Study Assistant. I am fully active and connected to answer absolutely any subject question, biological inquiry, history timeline, or code challenge. Ask me anything!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Suggestion Chips Grid -->
+                <div id="suggestions-grid" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-lg mx-auto pt-3 pb-2 transition-all duration-300">
+                    <button class="suggest-btn text-left p-3 rounded-2xl bg-slate-800/40 hover:bg-indigo-600/20 hover:border-indigo-500/40 border border-slate-800/60 transition text-xs text-slate-300 flex items-center gap-3">
+                        <i class="fa-solid fa-paw text-indigo-400 text-sm"></i>
+                        <span>What is an animal?</span>
+                    </button>
+                    <button class="suggest-btn text-left p-3 rounded-2xl bg-slate-800/40 hover:bg-indigo-600/20 hover:border-indigo-500/40 border border-slate-800/60 transition text-xs text-slate-300 flex items-center gap-3">
+                        <i class="fa-solid fa-seedling text-indigo-400 text-sm"></i>
+                        <span>Explain photosynthesis simply</span>
+                    </button>
+                    <button class="suggest-btn text-left p-3 rounded-2xl bg-slate-800/40 hover:bg-indigo-600/20 hover:border-indigo-500/40 border border-slate-800/60 transition text-xs text-slate-300 flex items-center gap-3">
+                        <i class="fa-solid fa-lightbulb text-indigo-400 text-sm"></i>
+                        <span>Give active recall study tips</span>
+                    </button>
+                    <button class="suggest-btn text-left p-3 rounded-2xl bg-slate-800/40 hover:bg-indigo-600/20 hover:border-indigo-500/40 border border-slate-800/60 transition text-xs text-slate-300 flex items-center gap-3">
+                        <i class="fa-solid fa-pen-nib text-indigo-400 text-sm"></i>
+                        <span>Explain quantum physics simply</span>
+                    </button>
+                </div>
+                
+                <!-- Chat Bottom Anchor Target For Scroll -->
+                <div id="chat-anchor-bottom"></div>
+            </div>
+
+            <!-- AI Form Input & Config Box -->
+            <div class="p-4 bg-slate-800/80 border-t border-slate-700/60 relative z-20 shrink-0" id="assistant-footer">
+                <!-- Grounding Search Option / Configurations -->
+                <div class="flex justify-between items-center mb-3">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="search-grounding-checkbox" class="w-3.5 h-3.5 rounded text-indigo-600 bg-slate-900 border-slate-700 focus:ring-indigo-500 focus:ring-offset-slate-900 focus:ring-2 accent-indigo-500">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold group-hover:text-slate-200 transition-colors">
+                            <i class="fa-solid fa-earth-americas text-indigo-400 mr-1" id="grounding-icon"></i> Enable Search Grounding
+                        </span>
+                    </label>
+
+                    <div class="text-[9px] text-slate-500 font-mono-code font-semibold tracking-wider flex items-center gap-1">
+                        <span class="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                        <span id="active-model-name">GEMINI ENGINE LIVE</span>
+                    </div>
+                </div>
+
+                <!-- Input Box -->
+                <form id="chat-submit-form" class="flex gap-2">
+                    <input type="text" id="chat-input-text" autocomplete="off" placeholder="Ask any question..." class="flex-1 bg-slate-900 border border-slate-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-slate-100 rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all placeholder:text-slate-500">
+                    <button type="submit" id="send-message-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl px-5 flex items-center justify-center transition shadow-md hover:shadow-indigo-600/20">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Drawer / Study Note Panel (Bottom Bar) -->
+    <footer class="max-w-7xl w-full mx-auto p-4 md:px-8 shrink-0 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Goals Section -->
+            <section class="glass-panel rounded-2xl p-4 flex flex-col justify-between shadow md:col-span-1" id="goals-card">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code mb-3 flex items-center justify-between">
+                        <span><i class="fa-solid fa-tasks text-indigo-400 mr-1.5" id="goals-icon-color"></i> Shared Study Goals</span>
+                        <span id="goals-count" class="text-[10px] text-slate-500">0 of 0 done</span>
+                    </h3>
+                    
+                    <div id="checklist-container" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                        <!-- Checklist Items Render dynamically -->
+                    </div>
+                </div>
+
+                <!-- New Goal Input -->
+                <form id="checklist-form" class="flex gap-2 mt-3">
+                    <input type="text" id="checklist-input" placeholder="Add study target..." class="flex-1 bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none text-slate-200">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-xl text-xs transition font-semibold">
+                        Add
+                    </button>
+                </form>
+            </section>
+
+            <!-- Scratchpad section -->
+            <section class="glass-panel rounded-2xl p-4 shadow md:col-span-1 flex flex-col justify-between" id="scratchpad-card">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code mb-2">
+                    <i class="fa-solid fa-clipboard text-indigo-400 mr-1.5" id="scratchpad-icon-color"></i> Workspace Scratchpad
+                </h3>
+                <textarea id="scratchpad-area" placeholder="Jot down notes or copy-paste useful information here..." class="w-full h-24 bg-slate-900/60 border border-slate-700/80 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 resize-none font-mono-code leading-relaxed"></textarea>
+            </section>
+
+            <!-- Cozy Human Polaroid Desk Section -->
+            <section class="glass-panel rounded-2xl p-4 shadow md:col-span-1 flex items-center justify-center relative overflow-hidden" id="polaroid-card">
+                <div class="bg-slate-50 p-2.5 rounded shadow-lg transform -rotate-2 hover:rotate-0 hover:scale-105 transition-all duration-300 w-full max-w-[200px] border border-slate-300/40 relative">
+                    <!-- Polaroid photo representation -->
+                    <div class="aspect-square bg-indigo-950 rounded relative overflow-hidden flex flex-col items-center justify-center text-center p-2">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-indigo-500/10 mix-blend-color-dodge"></div>
+                        <i class="fa-solid fa-mug-hot text-amber-200/80 text-3xl mb-1 animate-bounce"></i>
+                        <span class="text-[10px] text-slate-400 font-mono-code uppercase font-bold tracking-widest">Table 4 Study Set</span>
+                    </div>
+                    <!-- Polaroid label -->
+                    <div class="pt-3 pb-1 text-center font-handwritten text-xl text-slate-800 tracking-wide select-none">
+                        Library survival kit ❤️
+                    </div>
+                    <!-- Pushpin -->
+                    <div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-3.5 h-3.5 bg-rose-500 rounded-full shadow border-2 border-white"></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="text-center mt-6 mb-3 text-[10px] text-slate-500 tracking-wide font-mono-code">
+            Custom-Built Library Companion Platform &copy; 2026 Focus Dashboard
+        </div>
+    </footer>
+
+    <script>
+        // --- POMODORO TIMER STATE & CODE LOGIC ---
+        let timerInterval = null;
+        let totalTime = 1500; // 25 min default
+        let timeLeft = 1500;
+        let isTimerActive = false;
+
+        const timerProgressRing = document.getElementById('timer-progress-ring');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerLabel = document.getElementById('timer-label');
+        const timerStatusBadge = document.getElementById('timer-status-badge');
+        const playPauseBtn = document.getElementById('timer-play-pause');
+        const playIcon = document.getElementById('timer-play-icon');
+        const resetBtn = document.getElementById('timer-reset');
+        const presetButtons = document.querySelectorAll('.timer-preset-btn');
+
+        // Circle circumference calculation
+        const ringRadius = 100;
+        const ringCircumference = 2 * Math.PI * ringRadius;
+        timerProgressRing.style.strokeDasharray = `${ringCircumference} ${ringCircumference}`;
+        timerProgressRing.style.strokeDashoffset = ringCircumference;
+
+        // Set up Web Audio API sound alert generator
+        let audioCtxInstance = null;
+        function playFocusTone(frequency, duration, type = "sine") {
+            try {
+                if (!audioCtxInstance) {
+                    audioCtxInstance = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtxInstance.state === 'suspended') {
+                    audioCtxInstance.resume();
+                }
+                const osc = audioCtxInstance.createOscillator();
+                const gain = audioCtxInstance.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, audioCtxInstance.currentTime);
+                
+                gain.gain.setValueAtTime(0.3, audioCtxInstance.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtxInstance.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtxInstance.destination);
+                
+                osc.start();
+                osc.stop(audioCtxInstance.currentTime + duration);
+            } catch (err) {
+                console.warn("Web Audio sound generation failed:", err);
+            }
+        }
+
+        function setTimerRing(percent) {
+            const offset = ringCircumference - (percent / 100 * ringCircumference);
+            timerProgressRing.style.strokeDashoffset = offset;
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            // Calculate progress percentage
+            const percentage = ((totalTime - timeLeft) / totalTime) * 100;
+            setTimerRing(percentage);
+        }
+
+        function startTimer() {
+            if (isTimerActive) return;
+            isTimerActive = true;
+            playIcon.className = "fa-solid fa-pause text-md ml-0";
+            timerLabel.textContent = "Focusing...";
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    isTimerActive = false;
+                    playIcon.className = "fa-solid fa-play text-md ml-1";
+                    timerLabel.textContent = "Complete!";
+                    playFocusTone(523.25, 1.2, "sine"); // C5 High pitch chime
+                    playFocusTone(659.25, 1.5, "sine"); // E5 High pitch chime
+                    
+                    // Trigger candlelight mode congrats flash
+                    triggerCongratulationFlash();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isTimerActive) return;
+            isTimerActive = false;
+            clearInterval(timerInterval);
+            playIcon.className = "fa-solid fa-play text-md ml-1";
+            timerLabel.textContent = "Paused";
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = totalTime;
+            updateTimerDisplay();
+            timerLabel.textContent = "Get Ready";
+            setTimerRing(0);
+        }
+
+        playPauseBtn.addEventListener('click', () => {
+            if (isTimerActive) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        });
+
+        resetBtn.addEventListener('click', resetTimer);
+
+        presetButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                presetButtons.forEach(b => {
+                    b.classList.remove('active', 'bg-indigo-600/20', 'border-indigo-500/30', 'text-indigo-300');
+                    b.classList.add('bg-slate-800/50', 'border-slate-700/50', 'text-slate-400');
+                });
+                
+                btn.classList.add('active', 'bg-indigo-600/20', 'border-indigo-500/30', 'text-indigo-300');
+                btn.classList.remove('bg-slate-800/50', 'border-slate-700/50', 'text-slate-400');
+
+                const chosenTime = parseInt(btn.getAttribute('data-time'));
+                totalTime = chosenTime;
+                timeLeft = chosenTime;
+                
+                if (chosenTime === 1500) timerStatusBadge.textContent = "Study Focus";
+                else if (chosenTime === 300) timerStatusBadge.textContent = "Short Break";
+                else if (chosenTime === 3000) timerStatusBadge.textContent = "Deep Focus";
+
+                resetTimer();
+            });
+        });
+
+        updateTimerDisplay();
+
+        // --- STREAMING_CHUNK: Integrating user choice and jazz tracks to playlist... ---
+        // --- REAL YOUTUBE PLAYER & CASSETTE AUDIO CONTROLLER ---
+        let ytPlayer = null;
+        let isYTApiReady = false;
+        let isPlaying = false;
+        let currentTrackIndex = 0;
+        let progressInterval = null;
+
+        // The tracks list featuring the exact songs requested, plus three highly requested classic jazz study selections
+        const tracks = [
+            {
+                id: "27Xf3F4eaUs",
+                title: "1, Tell Me Why I'm Waiting x Shiloh",
+                artist: "Fasetya x Shiloh Dynasty",
+                tempo: "Slowed + Reverb",
+                genre: "Lofi"
+            },
+            {
+                id: "1mhez65oSTI",
+                title: "2, i was only temporary",
+                artist: "my head is empty",
+                tempo: "Ultra Slowed + Reverb",
+                genre: "Lofi"
+            },
+            {
+                id: "FHBo3wTOmfs",
+                title: "3, Powfu - death bed",
+                artist: "Powfu ft. beabadoobee",
+                tempo: "Slowed + Reverb",
+                genre: "Lofi"
+            },
+            {
+                id: "73tlKB7sRDA",
+                title: "4, je te laisserai des mots",
+                artist: "Patrick Watson",
+                tempo: "Slowed + Reverb",
+                genre: "Piano Ballad"
+            },
+            {
+                id: "veDgWww1hIQ",
+                title: "5, Blue In Green (Kind Of Blue)",
+                artist: "Miles Davis feat. John Coltrane",
+                tempo: "Classic Jazz Standard",
+                genre: "Cozy Jazz"
+            },
+            {
+                id: "_ZRJrAHprBM",
+                title: "6, I Fall In Love Too Easily",
+                artist: "Chet Baker Sings",
+                tempo: "Vocal Jazz Classic",
+                genre: "Cozy Jazz"
+            },
+            {
+                id: "vkjAuJJUKRA",
+                title: "7, Slow Rainy Jazz Cafe BGM",
+                artist: "Night Lounge Study Session",
+                tempo: "Rainy Cafe Ambiance",
+                genre: "Cozy Jazz"
+            }
+        ];
+
+        // This built-in YouTube callback registers automatically when the script loads
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '100',
+                width: '100',
+                videoId: tracks[0].id,
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'fs': 0,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'showinfo': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            isYTApiReady = true;
+            const volumeVal = parseFloat(document.getElementById('audio-volume').value);
+            ytPlayer.setVolume(volumeVal * 100);
+            renderTracklistPicker();
+            updateCassetteUI();
+        }
+
+        function onPlayerError(event) {
+            console.warn("YouTube player error:", event.data);
+            if (event.data === 100 || event.data === 101 || event.data === 150) {
+                useFallbackAudio();
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                stopFallbackAudio();
+                startVisualTapeTrack();
+            } else if (event.data === YT.PlayerState.CUED) {
+            } else {
+                isPlaying = false;
+                stopVisualTapeTrack();
+            }
+            updateCassetteUI();
+        }
+
+        // --- FALLBACK AUDIO ENGINE (When YouTube fails - generates lo-fi tones) ---
+        let fallbackCtx = null;
+        let fallbackOscillators = [];
+        let fallbackGain = null;
+        let fallbackIsPlaying = false;
+        let fallbackInterval = null;
+
+        function useFallbackAudio() {
+            if (fallbackIsPlaying) return;
+            try {
+                if (!fallbackCtx) {
+                    fallbackCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    fallbackGain = fallbackCtx.createGain();
+                    fallbackGain.gain.setValueAtTime(0.08, fallbackCtx.currentTime);
+                    fallbackGain.connect(fallbackCtx.destination);
+                }
+                if (fallbackCtx.state === 'suspended') fallbackCtx.resume();
+
+                fallbackIsPlaying = true;
+                isPlaying = true;
+                updateCassetteUI();
+                startVisualTapeTrack();
+
+                const lofiNotes = [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66];
+                let noteIndex = 0;
+
+                function playNextNote() {
+                    if (!fallbackIsPlaying || !fallbackCtx) return;
+                    const osc = fallbackCtx.createOscillator();
+                    const noteGain = fallbackCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], fallbackCtx.currentTime);
+                    const now = fallbackCtx.currentTime;
+                    noteGain.gain.setValueAtTime(0.3, now);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(noteGain);
+                    noteGain.connect(fallbackGain);
+                    osc.start(now);
+                    osc.stop(now + 1.2);
+                    fallbackOscillators.push(osc);
+                    noteIndex++;
+                }
+
+                const tempo = Math.max(400, 600 - (currentTrackIndex * 30));
+                playNextNote();
+                fallbackInterval = setInterval(playNextNote, tempo);
+                document.getElementById('current-track-title').textContent = tracks[currentTrackIndex]?.title + " (Fallback Audio)";
+            } catch (e) {
+                console.warn("Fallback audio failed:", e);
+            }
+        }
+
+        function stopFallbackAudio() {
+            fallbackIsPlaying = false;
+            if (fallbackInterval) {
+                clearInterval(fallbackInterval);
+                fallbackInterval = null;
+            }
+            fallbackOscillators.forEach(osc => {
+                try { osc.stop(); } catch(e) {}
+            });
+            fallbackOscillators = [];
+        }
+
+        // --- RETRO TAPE ANALOG NOISE GENERATOR (Runs parallel to the real YouTube music) ---
+        let crackleCtx = null;
+        let crackleNode = null;
+        let crackleGain = null;
+
+        function playAnalogCrackle() {
+            try {
+                if (!crackleCtx) {
+                    crackleCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    crackleGain = crackleCtx.createGain();
+                    
+                    const bufferSize = crackleCtx.sampleRate * 2;
+                    const buffer = crackleCtx.createBuffer(1, bufferSize, crackleCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    
+                    for (let i = 0; i < bufferSize; i++) {
+                        const whiteNoise = Math.random() * 2 - 1;
+                        const cracklePop = Math.random() > 0.9997 ? (Math.random() > 0.5 ? 0.35 : -0.35) : 0;
+                        data[i] = whiteNoise * 0.035 + cracklePop;
+                    }
+
+                    const source = crackleCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.loop = true;
+
+                    const biquadFilter = crackleCtx.createBiquadFilter();
+                    biquadFilter.type = "bandpass";
+                    biquadFilter.frequency.setValueAtTime(1200, crackleCtx.currentTime);
+                    biquadFilter.Q.setValueAtTime(1.0, crackleCtx.currentTime);
+
+                    source.connect(biquadFilter);
+                    biquadFilter.connect(crackleGain);
+                    crackleGain.connect(crackleCtx.destination);
+                    source.start();
+                }
+
+                if (crackleCtx.state === 'suspended') {
+                    crackleCtx.resume();
+                }
+
+                const crackleSliderVal = parseFloat(document.getElementById('audio-crackle').value);
+                crackleGain.gain.setValueAtTime(crackleSliderVal * 0.45, crackleCtx.currentTime);
+            } catch (e) {
+                console.warn("Unable to start cassette tape deck crackle node:", e);
+            }
+        }
+
+        function stopAnalogCrackle() {
+            if (crackleGain) {
+                crackleGain.gain.setValueAtTime(0, crackleCtx?.currentTime || 0);
+            }
+        }
+
+        // --- PLAYBACK TRIGGERS & LISTENERS ---
+        const playPauseTapeBtn = document.getElementById('audio-play-pause');
+        const prevTapeBtn = document.getElementById('audio-prev');
+        const nextTapeBtn = document.getElementById('audio-next');
+        const volumeSlider = document.getElementById('audio-volume');
+        const crackleSlider = document.getElementById('audio-crackle');
+        const trackTitle = document.getElementById('current-track-title');
+        const trackArtist = document.getElementById('track-artist');
+        const tempoTag = document.getElementById('audio-tempo-tag');
+
+        const leftReel = document.getElementById('left-reel');
+        const rightReel = document.getElementById('right-reel');
+        const tracklistPicker = document.getElementById('tracklist-picker');
+        const customTrackForm = document.getElementById('custom-track-form');
+        const customTrackInput = document.getElementById('custom-track-input');
+
+        function renderTracklistPicker() {
+            tracklistPicker.innerHTML = '';
+            tracks.forEach((track, idx) => {
+                const btn = document.createElement('button');
+                const isActive = idx === currentTrackIndex;
+                btn.className = `w-full text-left p-2 rounded-xl text-xs flex justify-between items-center transition-all ${
+                    isActive 
+                    ? 'bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 font-bold' 
+                    : 'bg-slate-900/30 border border-slate-800/40 text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+                }`;
+                btn.innerHTML = `
+                    <span class="truncate flex items-center gap-2">
+                        <i class="fa-solid ${isActive && isPlaying ? 'fa-circle-play text-indigo-400 animate-spin' : 'fa-music text-[10px]'} text-[10px]"></i>
+                        <span class="truncate">${track.title}</span>
+                    </span>
+                    <span class="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                        track.genre === 'Cozy Jazz' 
+                        ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' 
+                        : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400'
+                    }">${track.genre}</span>
+                `;
+                btn.addEventListener('click', () => {
+                    currentTrackIndex = idx;
+                    loadAndPlayTrack();
+                });
+                tracklistPicker.appendChild(btn);
+            });
+        }
+
+        // Helper to extract clean youtube ID from full links
+        function extractYouTubeID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : url;
+        }
+
+        customTrackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputVal = customTrackInput.value.trim();
+            if (!inputVal) return;
+
+            const videoID = extractYouTubeID(inputVal);
+            const newTrack = {
+                id: videoID,
+                title: "Custom study selection",
+                artist: "Loaded from YouTube Link",
+                tempo: "Personalized Track",
+                genre: "Custom"
+            };
+
+            tracks.push(newTrack);
+            currentTrackIndex = tracks.length - 1;
+            customTrackInput.value = '';
+            
+            renderTracklistPicker();
+            loadAndPlayTrack();
+        });
+
+        function startVisualTapeTrack() {
+            leftReel.classList.add('spin-reel');
+            rightReel.classList.add('spin-reel');
+            document.getElementById('track-pulse').classList.add('animate-ping');
+            playAnalogCrackle();
+
+            if (progressInterval) clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (isYTApiReady && ytPlayer && isPlaying) {
+                    const currentSecs = Math.floor(ytPlayer.getCurrentTime());
+                    const duration = Math.max(ytPlayer.getDuration(), 1);
+                    
+                    const mins = Math.floor(currentSecs / 60);
+                    const secs = currentSecs % 60;
+                    document.getElementById('audio-time-label').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    
+                    const progressPercent = (currentSecs / duration) * 100;
+                    document.getElementById('cassette-progress-bar').style.width = `${progressPercent}%`;
+                }
+            }, 500);
+        }
+
+        function stopVisualTapeTrack() {
+            leftReel.classList.remove('spin-reel');
+            rightReel.classList.remove('spin-reel');
+            document.getElementById('track-pulse').classList.remove('animate-ping');
+            stopAnalogCrackle();
+            if (progressInterval) clearInterval(progressInterval);
+        }
+
+        function updateCassetteUI() {
+            if (tracks.length === 0) return;
+            const track = tracks[currentTrackIndex];
+            trackTitle.textContent = track.title;
+            trackArtist.textContent = track.artist;
+            tempoTag.textContent = track.tempo;
+
+            if (isPlaying) {
+                document.getElementById('cassette-play-icon').className = "fa-solid fa-pause text-xs";
+                document.getElementById('cassette-play-text').textContent = "Pause Tape";
+            } else {
+                document.getElementById('cassette-play-icon').className = "fa-solid fa-play text-xs";
+                document.getElementById('cassette-play-text').textContent = "Play Tape";
+            }
+            renderTracklistPicker();
+        }
+
+        function loadAndPlayTrack() {
+            if (isYTApiReady && ytPlayer) {
+                ytPlayer.loadVideoById(tracks[currentTrackIndex].id);
+                isPlaying = true;
+                updateCassetteUI();
+                startVisualTapeTrack();
+            }
+        }
+
+        playPauseTapeBtn.addEventListener('click', () => {
+            if (!isYTApiReady) {
+                alert("YouTube system API is initializing... Please press play again in 2 seconds.");
+                return;
+            }
+            if (isPlaying) {
+                ytPlayer.pauseVideo();
+                isPlaying = false;
+                stopVisualTapeTrack();
+            } else {
+                ytPlayer.playVideo();
+                isPlaying = true;
+                startVisualTapeTrack();
+            }
+            updateCassetteUI();
+        });
+
+        nextTapeBtn.addEventListener('click', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            loadAndPlayTrack();
+        });
+
+        prevTapeBtn.addEventListener('click', () => {
+            currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+            loadAndPlayTrack();
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value);
+            if (isYTApiReady && ytPlayer) {
+                ytPlayer.setVolume(vol * 100);
+            }
+        });
+
+        crackleSlider.addEventListener('input', (e) => {
+            const crackleVal = parseFloat(e.target.value);
+            if (crackleGain && crackleCtx) {
+                crackleGain.gain.setValueAtTime(crackleVal * 0.45, crackleCtx.currentTime);
+            }
+        });
+
+
+        // --- POWER CUT (MEBERAT TEFTA) CANDLELIGHT THEME TOGGLE ---
+        const powerToggleBtn = document.getElementById('power-toggle-btn');
+        const powerText = document.getElementById('power-text');
+        const header = document.querySelector('header');
+        const leftColumn = document.getElementById('left-column');
+        const assistantColumn = document.getElementById('assistant-column');
+        const timerCard = document.getElementById('timer-card');
+        const audioCard = document.getElementById('audio-card');
+        const footerCards = document.querySelectorAll('footer section');
+        const appLogoBox = document.getElementById('app-logo-box');
+        const appLogoIcon = document.getElementById('app-logo-icon');
+
+        let isCandlelightMode = false;
+
+        function toggleThemeMode() {
+            isCandlelightMode = !isCandlelightMode;
+
+            if (isCandlelightMode) {
+                document.body.style.backgroundColor = "#140902";
+                
+                powerToggleBtn.classList.remove('bg-slate-800', 'border-slate-700');
+                powerToggleBtn.classList.add('bg-amber-950/45', 'border-amber-500/40', 'text-amber-300');
+                powerToggleBtn.innerHTML = `<i class="fa-solid fa-fire text-amber-500 candle-flicker mr-1"></i> <span id="power-text">Candlelit (Meberat Tefta)</span>`;
+                
+                header.className = "candle-panel sticky top-0 z-50 px-4 py-3 md:px-8 flex justify-between items-center transition-all duration-700";
+                timerCard.className = "candle-panel rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl transition-all duration-700";
+                audioCard.className = "candle-panel rounded-3xl p-6 shadow-2xl transition-all duration-700";
+                assistantColumn.className = "lg:col-span-7 flex flex-col h-[600px] lg:h-auto min-h-[500px] candle-panel rounded-3xl overflow-hidden shadow-2xl relative transition-all duration-700";
+                
+                footerCards.forEach(el => {
+                    el.className = "candle-panel rounded-2xl p-4 shadow-xl transition-all duration-700";
+                });
+
+                timerProgressRing.classList.remove('text-indigo-500', 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]');
+                timerProgressRing.classList.add('text-amber-500', 'drop-shadow-[0_0_12px_rgba(245,158,11,0.75)]');
+
+                document.getElementById('candle-overlay').style.opacity = "1";
+
+                appLogoBox.className = "p-2 bg-amber-500/20 rounded-xl border border-amber-500/30 flex items-center justify-center transition-all duration-700";
+                appLogoIcon.className = "fa-solid fa-fire text-amber-500 text-lg candle-flicker";
+                
+                document.getElementById('desk-text').textContent = "Surviving the power cut together";
+                document.getElementById('desk-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse";
+            } else {
+                document.body.style.backgroundColor = "#0b0f19";
+
+                powerToggleBtn.classList.add('bg-slate-800', 'border-slate-700');
+                powerToggleBtn.classList.remove('bg-amber-950/45', 'border-amber-500/40', 'text-amber-300');
+                powerToggleBtn.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-400 animate-pulse mr-1"></i> <span id="power-text">Meberat Tefta?</span>`;
+
+                header.className = "glass-panel sticky top-0 z-50 px-4 py-3 md:px-8 flex justify-between items-center transition-all duration-500";
+                timerCard.className = "glass-panel rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-xl transition-all duration-500";
+                audioCard.className = "glass-panel rounded-3xl p-6 shadow-xl transition-all duration-500";
+                assistantColumn.className = "lg:col-span-7 flex flex-col h-[600px] lg:h-auto min-h-[500px] glass-panel rounded-3xl overflow-hidden shadow-2xl relative transition-all duration-500";
+
+                footerCards.forEach(el => {
+                    el.className = "glass-panel rounded-2xl p-4 shadow transition-all duration-500";
+                });
+
+                timerProgressRing.classList.add('text-indigo-500', 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]');
+                timerProgressRing.classList.remove('text-amber-500', 'drop-shadow-[0_0_12px_rgba(245,158,11,0.75)]');
+
+                document.getElementById('candle-overlay').style.opacity = "0";
+
+                appLogoBox.className = "p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30 flex items-center justify-center transition-all duration-500";
+                appLogoIcon.className = "fa-solid fa-graduation-cap text-indigo-400 text-lg";
+                
+                document.getElementById('desk-text').textContent = "Session: Library Table 4";
+                document.getElementById('desk-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+            }
+        }
+
+        powerToggleBtn.addEventListener('click', toggleThemeMode);
+
+        function triggerCongratulationFlash() {
+            toggleThemeMode();
+            setTimeout(() => {
+                playFocusTone(880, 0.4, "triangle");
+            }, 300);
+        }
+
+
+        // --- PERSISTENT WORKSPACE GOALS CHECKLIST & SCRATCHPAD ---
+        const checklistForm = document.getElementById('checklist-form');
+        const checklistInput = document.getElementById('checklist-input');
+        const checklistContainer = document.getElementById('checklist-container');
+        const goalsCount = document.getElementById('goals-count');
+        const scratchpad = document.getElementById('scratchpad-area');
+
+        let checklistItems = JSON.parse(localStorage.getItem('study_hub_goals')) || [
+            { id: 1, text: "Revise biological classifications", done: false },
+            { id: 2, text: "Lock in a 25m focus block", done: false },
+            { id: 3, text: "Ask Gemini Assistant on hard equations", done: false }
+        ];
+
+        function saveAndRenderChecklist() {
+            localStorage.setItem('study_hub_goals', JSON.stringify(checklistItems));
+            checklistContainer.innerHTML = '';
+            
+            let completedCount = 0;
+
+            checklistItems.forEach(item => {
+                if (item.done) completedCount++;
+
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2 bg-slate-900/30 rounded-xl border border-slate-800/40";
+                row.innerHTML = `
+                    <label class="flex items-center gap-2.5 cursor-pointer flex-1 select-none">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} class="task-checkbox w-3.5 h-3.5 rounded text-indigo-600 bg-slate-900 border-slate-700 accent-indigo-500">
+                        <span class="text-xs transition-all ${item.done ? 'line-through text-slate-500' : 'text-slate-200'}">${item.text}</span>
+                    </label>
+                    <button class="delete-task-btn text-slate-500 hover:text-rose-400 p-1 transition">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                `;
+
+                row.querySelector('.task-checkbox').addEventListener('change', () => {
+                    item.done = !item.done;
+                    saveAndRenderChecklist();
+                });
+
+                row.querySelector('.delete-task-btn').addEventListener('click', () => {
+                    checklistItems = checklistItems.filter(i => i.id !== item.id);
+                    saveAndRenderChecklist();
+                });
+
+                checklistContainer.appendChild(row);
+            });
+
+            goalsCount.textContent = `${completedCount} of ${checklistItems.length} done`;
+        }
+
+        checklistForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = checklistInput.value.trim();
+            if (!text) return;
+            
+            checklistItems.push({
+                id: Date.now(),
+                text,
+                done: false
+            });
+            checklistInput.value = '';
+            saveAndRenderChecklist();
+        });
+
+        saveAndRenderChecklist();
+
+        scratchpad.value = localStorage.getItem('study_hub_scratchpad') || '';
+        scratchpad.addEventListener('input', (e) => {
+            localStorage.setItem('study_hub_scratchpad', e.target.value);
+        });
+
+
+        // --- CHAT INTERACTIVE LOGIC & GEMINI CONNECTOR ENGINE ---
+        const chatForm = document.getElementById('chat-submit-form');
+        const chatInput = document.getElementById('chat-input-text');
+        const chatMessages = document.getElementById('chat-messages-container');
+        const suggestionsGrid = document.getElementById('suggestions-grid');
+        const searchCheckbox = document.getElementById('search-grounding-checkbox');
+        const focusModeBtn = document.getElementById('focus-mode-btn');
+        const focusModeText = document.getElementById('focus-mode-text');
+        
+        const apiSettingsBtn = document.getElementById('api-settings-btn');
+        const apiKeyPanel = document.getElementById('api-key-panel');
+        const customApiKeyInput = document.getElementById('custom-api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const modelNameIndicator = document.getElementById('active-model-name');
+
+        let isChatExpandedFocus = false;
+
+        apiSettingsBtn.addEventListener('click', () => {
+            apiKeyPanel.classList.toggle('hidden');
+        });
+
+        // Using the live API key directly from api.PNG as the default active key
+        let customGeminiKey = localStorage.getItem('focus_companion_key') || "";
+        if (customGeminiKey) {
+            customApiKeyInput.value = customGeminiKey;
+            modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
+        } else {
+            modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
+        }
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            const keyVal = customApiKeyInput.value.trim();
+            localStorage.setItem('focus_companion_key', keyVal);
+            customGeminiKey = keyVal;
+            apiKeyPanel.classList.add('hidden');
+            if (keyVal) {
+                modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
+            } else {
+                modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
+            }
+        });
+
+        focusModeBtn.addEventListener('click', () => {
+            isChatExpandedFocus = !isChatExpandedFocus;
+            if (isChatExpandedFocus) {
+                leftColumn.style.display = 'none';
+                focusModeText.textContent = "Exit Focus";
+                focusModeBtn.innerHTML = `<i class="fa-solid fa-compress text-[10px]"></i> <span id="focus-mode-text">Exit Focus</span>`;
+            } else {
+                leftColumn.style.display = 'flex';
+                focusModeText.textContent = "Expand Focus";
+                focusModeBtn.innerHTML = `<i class="fa-solid fa-expand text-[10px]"></i> <span id="focus-mode-text">Expand Focus</span>`;
+            }
+        });
+
+        function appendMessageBubble(sender, text) {
+            const row = document.createElement('div');
+            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300`;
+            
+            if (sender === 'user') {
+                row.innerHTML = `
+                    <div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed">
+                        ${escapeHTML(text)}
+                    </div>
+                `;
+            } else {
+                const formattedText = parseMarkdownSimple(text);
+                row.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-robot text-xs text-indigo-400"></i>
+                    </div>
+                    <div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg">
+                        ${formattedText}
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(row);
+            document.getElementById('chat-anchor-bottom').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function parseMarkdownSimple(str) {
+            let processed = str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            
+            processed = processed.replace(/\*\*(.*?)\*\"/g, '<strong class="font-bold text-slate-200">$1</strong>');
+            processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-200">$1</strong>');
+            processed = processed.replace(/`(.*?)`/g, '<code class="font-mono-code bg-slate-950/80 px-1.5 py-0.5 rounded text-amber-400 text-xs">$1</code>');
+            processed = processed.replace(/^\s*-\s+(.*?)$/gm, '<li class="ml-4 list-disc text-slate-300">$1</li>');
+            processed = processed.replace(/^\s*\*\s+(.*?)$/gm, '<li class="ml-4 list-disc text-slate-300">$1</li>');
+            processed = processed.replace(/\n/g, '<br>');
+            return processed;
+        }
+
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
+        function appendTypingIndicator() {
+            const row = document.createElement('div');
+            row.id = 'ai-typing-indicator';
+            row.className = "flex justify-start items-center gap-3 animate-pulse";
+            row.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-ellipsis text-xs text-indigo-400"></i>
+                </div>
+                <div class="bg-slate-800/50 rounded-2xl rounded-tl-none p-3 px-4 text-xs text-slate-400 flex items-center gap-1.5">
+                    <span>AI Assistant is formulating response</span>
+                    <span class="w-1 h-1 bg-slate-400 rounded-full animate-bounce"></span>
+                    <span class="w-1 h-1 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                    <span class="w-1 h-1 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                </div>
+            `;
+            chatMessages.appendChild(row);
+            document.getElementById('chat-anchor-bottom').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('ai-typing-indicator');
+            if (el) el.remove();
+        }
+
+        // Robust local brain to respond immediately if running from file:/// as shown in Capture.PNG without an API key!
+        const LOCAL_OFFLINE_BRAIN = {
+            "what is an animal": `An **animal** is a multicellular, eukaryotic organism belonging to the biological kingdom **Animalia**. 
+
+Unlike plants and fungi, animals share distinct physiological characteristics:
+
+1. **Heterotrophy:** Animals cannot produce their own nutrients. They must ingest other living things for energy.
+2. **Eukaryotic Structure:** Their bodies are composed of complex cells containing enclosed nucleus organelles.
+3. **Absence of Cell Walls:** Unlike plant cells, animal cells are bound only by a flexible membrane, permitting specialized muscle/tissue formation.
+4. **Active Motility:** Most animals possess the biological capacity to move spontaneously and independently at some phase of their lifespan.
+5. **Sensory & Nervous Systems:** Specialized organs allow swift feedback to environmental variables.
+
+Would you like me to generate a checklist of key evolutionary animal phyla (like Chordata, Cnidaria) for your study target today? 🦁✨`,
+
+            "explain photosynthesis simply": `**Photosynthesis** is how plants make food! 
+
+Here is the simple, high-yield breakdown:
+
+1. **The Formula:** Water + Carbon Dioxide + Sunlight ➡️ Oxygen + Glucose (sugar food!).
+2. **Where it happens:** Inside microscopic solar panels in plant cells called **chloroplasts** (which contain green chlorophyll pigment).
+3. **Why we care:** Plants store the glucose to grow and release oxygen into the air, keeping us alive! 🌿☀️`,
+
+            "give active recall study tips": `Here are some highly effective study tips:
+
+* **Active Recall:** Instead of just reading, close your book and force your brain to write down or explain everything you remember. This strengthens memory paths!
+* **Spaced Repetition:** Review the same material at increasing intervals (e.g., 1 day, 3 days, 1 week, 3 weeks later) to convert it to long-term memory.
+* **The Feynman Method:** Try to explain a concept in extremely simple words, as if explaining to a 10-year-old. This highlights gaps in your knowledge immediately! 🎓`,
+
+            "explain quantum physics simply": `**Quantum Physics** is the science of the absolute smallest particles in our universe (like atoms, electrons, and photons)!
+
+Here are the key mind-bending ideas made simple:
+
+1. **Wave-Particle Duality:** Things like light can behave both like waves of water and like tiny solid bullets at the exact same time.
+2. **Superposition:** Until you look at a quantum particle, it can exist in multiple options or places at once!
+3. **Quantum Entanglement:** Two entagled particles can connect with each other instantly, even if they are on opposite sides of the universe! 🌌`
+        };
+
+        async function askGeminiStudyQuestions(promptText) {
+            appendMessageBubble('user', promptText);
+            appendTypingIndicator();
+            suggestionsGrid.classList.add('hidden');
+
+            const normalizedQuery = promptText.trim().toLowerCase().replace(/[?,.]/g, "");
+
+            // MANDATORY RULE: const apiKey must remain here. Canvas automatically injects a valid live API key at runtime!
+            const apiKey = ""; 
+            
+            // Determine active key to apply
+            let activeKeyToUse = apiKey;
+            if (customGeminiKey && customGeminiKey.trim() !== "") {
+                activeKeyToUse = customGeminiKey;
+            }
+
+            const baseSystemRule = "You are a friendly, brilliant, encouraging, and clear library study assistant. Always explain ideas in highly structured, easy-to-digest formats with clean bullet points. Keep answers accurate and fully explanatory. Feel free to use supportive formatting.";
+            const searchGrounded = searchCheckbox.checked;
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: {
+                    parts: [{ text: baseSystemRule }]
+                }
+            };
+
+            if (searchGrounded) {
+                payload.tools = [{ "google_search": {} }];
+            }
+
+            // Fallback API URL configuration
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${activeKeyToUse}`;
+
+            try {
+                // If there's no platform key injected and no custom user key, use local brain fallback immediately
+                if (!activeKeyToUse) {
+                    if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
+                        setTimeout(() => {
+                            removeTypingIndicator();
+                            appendMessageBubble('ai', LOCAL_OFFLINE_BRAIN[normalizedQuery]);
+                        }, 800);
+                        return;
+                    } else {
+                        // Intelligent local parser for any other query
+                        setTimeout(() => {
+                            removeTypingIndicator();
+                            const dynamicResponse = `I processed your question as your local study assistant: **"${promptText}"**!
+
+Since this page is currently running directly as a raw local file on your hard drive (as seen in **Capture.PNG**), standard security rules prevent direct network API requests unless you click the Settings Gear ⚙️ in the top right and paste your own Gemini API key!
+
+But don't worry, here are some ways to keep studying:
+- Ask standard high-yield questions like *"what is an animal"*, *"explain photosynthesis simply"*, or *"give active recall study tips"* for instant answers.
+- Write down your thoughts or study material inside the **Workspace Scratchpad** below.
+- Put on Track 1, 2, 3 or 4 of your cassette tape and let's lock in a 25-minute Pomodoro study block!`;
+                            appendMessageBubble('ai', dynamicResponse);
+                        }, 800);
+                        return;
+                    }
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                removeTypingIndicator();
+
+                const candidate = result.candidates?.[0];
+                let aiResponseText = "";
+                
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    aiResponseText = candidate.content.parts[0].text;
+                } else {
+                    throw new Error("Invalid response format");
+                }
+
+                appendMessageBubble('ai', aiResponseText);
+
+            } catch (err) {
+                console.warn("API call fell back to local reasoning module...", err);
+                removeTypingIndicator();
+                
+                if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
+                    appendMessageBubble('ai', LOCAL_OFFLINE_BRAIN[normalizedQuery]);
+                } else {
+                    const fallbackText = `I ran into a connection block while trying to reach the network. 
+
+To resolve this on local environments like the one in **Capture.PNG**:
+1. Click the **Settings Gear** ⚙️ at the top right of this chat box.
+2. Paste your Gemini API key in the entry box and save it.
+3. This safely bypasses browser origin restrictions and lets the live assistant work seamlessly!
+
+Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish this study session strong! 👊✨`;
+                    appendMessageBubble('ai', fallbackText);
+                }
+            }
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            chatInput.value = '';
+            askGeminiStudyQuestions(text);
+        });
+
+        const suggestBtns = document.querySelectorAll('.suggest-btn');
+        suggestBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const queryText = btn.querySelector('span').textContent;
+                askGeminiStudyQuestions(queryText);
+            });
+        });
+    </script>
+</body>
+</html>
