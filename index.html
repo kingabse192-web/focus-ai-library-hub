@@ -676,29 +676,6 @@
             }
         }
 
-        function beginTimerCountdown() {
-            isTimerActive = true;
-            playIcon.className = "fa-solid fa-pause text-md ml-0";
-            timerLabel.textContent = "Focusing...";
-
-            timerInterval = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    isTimerActive = false;
-                    playIcon.className = "fa-solid fa-play text-md ml-1";
-                    timerLabel.textContent = "Complete!";
-                    playFocusTone(523.25, 1.2, "sine");
-                    playFocusTone(659.25, 1.5, "sine");
-                    
-                    triggerCongratulationFlash();
-                }
-            }, 1000);
-        }
-
         function pauseTimer() {
             if (!isTimerActive) return;
             isTimerActive = false;
@@ -895,6 +872,11 @@
                 isPlaying = true;
                 stopFallbackAudio();
                 startVisualTapeTrack();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+                stopVisualTapeTrack();
+                currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+                loadAndPlayTrack();
             } else if (event.data === YT.PlayerState.CUED) {
             } else {
                 isPlaying = false;
@@ -1623,34 +1605,6 @@
             }, 1200);
         }
 
-        function appendMessageBubble(sender, text) {
-            chatHistory.push({ role: sender, text: text, time: new Date().toISOString() });
-            const row = document.createElement('div');
-            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300 mb-4`;
-            
-            if (sender === 'user') {
-                row.innerHTML = `
-                    <div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed user-bubble">
-                        ${escapeHTML(text)}
-                    </div>
-                `;
-            } else {
-                const formattedText = parseMarkdownSimple(text);
-                row.innerHTML = `
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <i class="fa-solid fa-robot text-xs text-indigo-400"></i>
-                    </div>
-                    <div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg ai-bubble">
-                        ${formattedText}
-                    </div>
-                `;
-            }
-
-            chatMessages.appendChild(row);
-            chatAnchor.scrollIntoView({ behavior: 'smooth' });
-            createMessageSparkles(row);
-        }
-
         function parseMarkdownSimple(str) {
             let processed = str
                 .replace(/&/g, "&amp;")
@@ -2090,9 +2044,7 @@ Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish thi
             ).join('');
         }
 
-        // Override appendMessageBubble to add save button
-        const origAppend = appendMessageBubble;
-        appendMessageBubble = function(sender, text) {
+        function appendMessageBubble(sender, text) {
             chatHistory.push({ role: sender, text: text, time: new Date().toISOString() });
             const row = document.createElement('div');
             row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300 mb-4`;
@@ -2105,7 +2057,7 @@ Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish thi
             chatAnchor.scrollIntoView({ behavior: 'smooth' });
             createMessageSparkles(row);
             addSaveButtonToBubble(row, text, sender);
-        };
+        }
 
         // 5. STRETCH REMINDER OVERLAY
         let stretchInterval = null;
@@ -2161,26 +2113,7 @@ Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish thi
         });
         document.querySelector('#assistant-header .flex.items-center.gap-2').prepend(themeBtn);
 
-        // 7. AUTO-PLAY NEXT TRACK (hook YT player ended state)
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                isPlaying = true;
-                stopFallbackAudio();
-                startVisualTapeTrack();
-            } else if (event.data === YT.PlayerState.ENDED) {
-                isPlaying = false;
-                stopVisualTapeTrack();
-                currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-                loadAndPlayTrack();
-            } else if (event.data === YT.PlayerState.CUED) {
-            } else {
-                isPlaying = false;
-                stopVisualTapeTrack();
-            }
-            updateCassetteUI();
-        }
-
-        // 8. RECORD FOCUS ON TIMER COMPLETE
+        // 7. RECORD FOCUS ON TIMER COMPLETE
         function beginTimerCountdown() {
             isTimerActive = true;
             playIcon.className = "fa-solid fa-pause text-md ml-0";
