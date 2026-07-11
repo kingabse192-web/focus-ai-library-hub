@@ -661,8 +661,17 @@
             if (!isYTApiReady) {
                 document.getElementById('current-track-title').textContent = tracks[0]?.title + " (Offline Mode)";
                 useFallbackAudio();
+                updateCassetteUI();
             }
         }, 6000);
+
+        // Also try to init fallback on first user tap anywhere
+        document.addEventListener('click', () => {
+            if (!isYTApiReady && !fallbackIsPlaying) {
+                useFallbackAudio();
+                updateCassetteUI();
+            }
+        }, { once: true });
 
         // The tracks list featuring the exact songs requested, plus three highly requested classic jazz study selections
         const tracks = [
@@ -758,10 +767,10 @@
                 genre: "Piano Ballad"
             },
             {
-                id: "mQR0bXO_yI8",
-                title: "14, Fly Me To The Moon",
-                artist: "Frank Sinatra",
-                tempo: "Classic Jazz Standard",
+                id: "tNHXDNaNqsU",
+                title: "14, Take Me (To The Moon)",
+                artist: "Ian Asher",
+                tempo: "Dreamy Piano",
                 genre: "Cozy Jazz"
             }
         ];
