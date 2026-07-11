@@ -7,13 +7,18 @@
     <!-- Google Fonts: Inter, Fira Code, cozy handwritten Caveat font and elegant serif Playfair -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for beautiful icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- YouTube IFrame API script -->
     <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Focus Hub">
     
     <style>
         body {
@@ -235,14 +240,42 @@
                 </div>
             </section>
 
-            <!-- STAGE 2: RETRO MIXTAPE DECK (With User Playlist Selector & Jazz Tracks) -->
-            <section id="audio-card" class="glass-panel rounded-3xl p-6 shadow-xl transition-all duration-500 flex flex-col gap-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center gap-2">
-                        <i class="fa-solid fa-compact-disc text-indigo-400" id="audio-icon-color"></i> Study Mixtape Deck
-                    </h2>
-                    <span class="text-[9px] font-mono-code bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 px-2 py-0.5 rounded-full uppercase">USER CHOOSE PLAYLIST</span>
+            <!-- Focus Stats Card -->
+            <section class="glass-panel rounded-2xl p-4 shadow md:col-span-1 flex flex-col justify-between" id="stats-card">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-chart-simple text-indigo-400 mr-1.5"></i> Focus Stats</span>
+                    <span id="streak-count" class="text-[10px] text-amber-400 font-bold">🔥 0 day streak</span>
+                </h3>
+                <div class="grid grid-cols-3 gap-2 text-center mb-2">
+                    <div class="bg-slate-900/40 rounded-xl p-2">
+                        <div class="text-lg font-bold text-indigo-400 font-mono-code" id="stat-today">0</div>
+                        <div class="text-[8px] text-slate-500 uppercase tracking-wider">Today</div>
+                    </div>
+                    <div class="bg-slate-900/40 rounded-xl p-2">
+                        <div class="text-lg font-bold text-emerald-400 font-mono-code" id="stat-week">0</div>
+                        <div class="text-[8px] text-slate-500 uppercase tracking-wider">This Week</div>
+                    </div>
+                    <div class="bg-slate-900/40 rounded-xl p-2">
+                        <div class="text-lg font-bold text-amber-400 font-mono-code" id="stat-total">0</div>
+                        <div class="text-[8px] text-slate-500 uppercase tracking-wider">Total</div>
+                    </div>
                 </div>
+                <div class="h-8 bg-slate-900/30 rounded-xl overflow-hidden flex" id="week-chart"></div>
+            </section>
+
+            <!-- Saved Notes Card -->
+            <section class="glass-panel rounded-2xl p-4 shadow md:col-span-1 flex flex-col justify-between" id="notes-card">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code mb-2 flex items-center justify-between">
+                        <span><i class="fa-solid fa-bookmark text-indigo-400 mr-1.5"></i> Saved Q&A</span>
+                        <span id="notes-count" class="text-[10px] text-slate-500">0 saved</span>
+                    </h3>
+                    <div id="notes-container" class="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+                        <div class="text-[10px] text-slate-500 text-center py-4">No saved notes yet. Click ★ on AI responses to save them.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
                 <!-- Custom Cassette Deck Illustration -->
                 <div class="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col items-center justify-between relative overflow-hidden shadow-inner" id="cassette-deck">
@@ -345,6 +378,35 @@
                         </span>
                         <input id="audio-crackle" type="range" min="0" max="1" step="0.05" value="0.4" class="w-full text-amber-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
                     </div>
+                </div>
+            </section>
+
+            <!-- STAGE 3: AMBIENT SOUND MIXER (Rain, Fireplace, Cafe) -->
+            <section id="ambient-card" class="glass-panel rounded-3xl p-6 shadow-xl transition-all duration-500 flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-rain text-indigo-400" id="ambient-icon-color"></i> Ambient Mixer
+                    </h2>
+                    <span id="ambient-active-label" class="text-[9px] font-mono-code text-slate-500">None</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button data-ambient="rain" class="ambient-btn flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40 hover:bg-indigo-600/20 hover:border-indigo-500/30 transition text-slate-400 hover:text-indigo-300">
+                        <i class="fa-solid fa-cloud-rain text-lg"></i>
+                        <span class="text-[9px] font-semibold uppercase tracking-wider">Rain</span>
+                    </button>
+                    <button data-ambient="fire" class="ambient-btn flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40 hover:bg-amber-600/20 hover:border-amber-500/30 transition text-slate-400 hover:text-amber-300">
+                        <i class="fa-solid fa-fire text-lg"></i>
+                        <span class="text-[9px] font-semibold uppercase tracking-wider">Fireplace</span>
+                    </button>
+                    <button data-ambient="cafe" class="ambient-btn flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40 hover:bg-emerald-600/20 hover:border-emerald-500/30 transition text-slate-400 hover:text-emerald-300">
+                        <i class="fa-solid fa-mug-hot text-lg"></i>
+                        <span class="text-[9px] font-semibold uppercase tracking-wider">Cafe</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-volume-low text-slate-500 text-[10px]"></i>
+                    <input id="ambient-volume" type="range" min="0" max="1" step="0.05" value="0.3" class="flex-1 text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+                    <i class="fa-solid fa-volume-high text-slate-500 text-[10px]"></i>
                 </div>
             </section>
         </div>
@@ -482,7 +544,7 @@
 
     <!-- Drawer / Study Note Panel (Bottom Bar) -->
     <footer class="max-w-7xl w-full mx-auto p-4 md:px-8 shrink-0 relative z-10">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <!-- Goals Section -->
             <section class="glass-panel rounded-2xl p-4 flex flex-col justify-between shadow md:col-span-1" id="goals-card">
                 <div>
@@ -1832,6 +1894,318 @@ Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish thi
                 askGeminiStudyQuestions(queryText);
             });
         });
+
+        // ===== NEW FEATURES =====
+
+        // 1. AMBIENT SOUND MIXER (rain, fireplace, cafe using Web Audio API)
+        let ambientCtx = null;
+        let ambientSource = null;
+        let ambientGain = null;
+        let ambientInterval = null;
+        let currentAmbient = null;
+
+        function generateAmbientNoise(type) {
+            if (!ambientCtx) {
+                ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
+                ambientGain = ambientCtx.createGain();
+                ambientGain.gain.setValueAtTime(parseFloat(document.getElementById('ambient-volume').value) * 0.3, ambientCtx.currentTime);
+                ambientGain.connect(ambientCtx.destination);
+            }
+            if (ambientCtx.state === 'suspended') ambientCtx.resume();
+
+            const sampleRate = ambientCtx.sampleRate;
+            const duration = 4;
+            const bufferSize = sampleRate * duration;
+            const buffer = ambientCtx.createBuffer(1, bufferSize, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                const t = i / sampleRate;
+                let val = 0;
+                if (type === 'rain') {
+                    const white = Math.random() * 2 - 1;
+                    const filter = Math.sin(t * 2000) * 0.3 + Math.sin(t * 4000) * 0.2;
+                    const drops = Math.random() > 0.998 ? (Math.random() > 0.5 ? 0.6 : -0.6) : 0;
+                    val = white * 0.15 + filter * 0.1 + drops;
+                } else if (type === 'fire') {
+                    const crackle = Math.random() > 0.995 ? (Math.random() > 0.5 ? 0.5 : -0.5) : 0;
+                    const rumble = Math.sin(t * 80) * 0.2 + Math.sin(t * 160) * 0.1;
+                    val = crackle * 0.3 + rumble * 0.2 + (Math.random() * 2 - 1) * 0.08;
+                } else if (type === 'cafe') {
+                    const murmur = Math.sin(t * 300 + Math.sin(t * 2) * 50) * 0.08;
+                    const chatter = Math.random() > 0.99 ? (Math.random() * 0.4) : 0;
+                    const clink = Math.random() > 0.997 ? 0.3 : 0;
+                    val = murmur + chatter + clink + (Math.random() * 2 - 1) * 0.04;
+                }
+                data[i] = Math.max(-1, Math.min(1, val));
+            }
+
+            if (ambientSource) { try { ambientSource.stop(); } catch(e) {} }
+            ambientSource = ambientCtx.createBufferSource();
+            ambientSource.buffer = buffer;
+            ambientSource.loop = true;
+            ambientSource.connect(ambientGain);
+            ambientSource.start();
+        }
+
+        document.querySelectorAll('.ambient-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.ambient;
+                document.querySelectorAll('.ambient-btn').forEach(b => {
+                    b.classList.remove('bg-indigo-600/20', 'border-indigo-500/30', 'text-indigo-300', 'bg-amber-600/20', 'border-amber-500/30', 'text-amber-300', 'bg-emerald-600/20', 'border-emerald-500/30', 'text-emerald-300');
+                });
+                if (currentAmbient === type) {
+                    currentAmbient = null;
+                    document.getElementById('ambient-active-label').textContent = 'None';
+                    if (ambientSource) { try { ambientSource.stop(); } catch(e) {} }
+                    return;
+                }
+                currentAmbient = type;
+                const colors = { rain: 'indigo', fire: 'amber', cafe: 'emerald' };
+                btn.classList.add(`bg-${colors[type]}-600/20`, `border-${colors[type]}-500/30`, `text-${colors[type]}-300`);
+                document.getElementById('ambient-active-label').textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                generateAmbientNoise(type);
+            });
+        });
+
+        document.getElementById('ambient-volume').addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value) * 0.3;
+            if (ambientGain) ambientGain.gain.setValueAtTime(vol, ambientCtx?.currentTime || 0);
+        });
+
+        // 2. VOICE INPUT FOR CHAT
+        let recognition = null;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            const micBtn = document.createElement('button');
+            micBtn.type = 'button';
+            micBtn.id = 'voice-input-btn';
+            micBtn.className = 'bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-2xl px-3.5 flex items-center justify-center transition border border-slate-600/50';
+            micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+            micBtn.addEventListener('click', () => {
+                if (!recognition) return;
+                micBtn.innerHTML = '<i class="fa-solid fa-microphone text-rose-400 animate-pulse"></i>';
+                micBtn.classList.add('bg-rose-600/20', 'border-rose-500/30');
+                recognition.start();
+            });
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                document.getElementById('chat-input-text').value = transcript;
+                document.getElementById('chat-submit-form').dispatchEvent(new Event('submit'));
+            };
+            recognition.onend = () => {
+                micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                micBtn.classList.remove('bg-rose-600/20', 'border-rose-500/30');
+            };
+            document.getElementById('chat-submit-form').appendChild(micBtn);
+        }
+
+        // 3. SAVE Q&A AS NOTES + AUTO-PLAY NEXT TRACK
+        function addSaveButtonToBubble(row, text, sender) {
+            if (sender !== 'ai') return;
+            const bubble = row.querySelector('.ai-bubble') || row.lastElementChild;
+            if (!bubble) return;
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'absolute top-2 right-2 text-[10px] text-slate-500 hover:text-amber-400 transition opacity-0 group-hover:opacity-100';
+            saveBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+            saveBtn.title = 'Save to notes';
+            bubble.classList.add('group');
+            bubble.style.position = 'relative';
+            bubble.appendChild(saveBtn);
+            saveBtn.addEventListener('click', () => {
+                const notes = JSON.parse(localStorage.getItem('focus_notes') || '[]');
+                notes.push({ text: text, date: new Date().toISOString().slice(0, 16) });
+                localStorage.setItem('focus_notes', JSON.stringify(notes));
+                saveBtn.innerHTML = '<i class="fa-solid fa-star text-amber-400"></i>';
+                renderSavedNotes();
+            });
+        }
+
+        // 4. FOCUS STATS & STREAK TRACKER
+        function recordFocusSession() {
+            const today = new Date().toISOString().slice(0, 10);
+            const stats = JSON.parse(localStorage.getItem('focus_stats') || '{}');
+            stats[today] = (stats[today] || 0) + 1;
+            localStorage.setItem('focus_stats', JSON.stringify(stats));
+            renderFocusStats();
+        }
+
+        function renderFocusStats() {
+            const stats = JSON.parse(localStorage.getItem('focus_stats') || '{}');
+            const today = new Date().toISOString().slice(0, 10);
+            const todayCount = stats[today] || 0;
+            const weekDays = [];
+            let weekCount = 0;
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const key = d.toISOString().slice(0, 10);
+                const c = stats[key] || 0;
+                weekDays.push(c);
+                weekCount += c;
+            }
+            const total = Object.values(stats).reduce((a, b) => a + b, 0);
+
+            // Streak calculation
+            let streak = 0;
+            const d = new Date();
+            while (true) {
+                const key = d.toISOString().slice(0, 10);
+                if (stats[key]) { streak++; d.setDate(d.getDate() - 1); }
+                else break;
+            }
+
+            document.getElementById('stat-today').textContent = todayCount;
+            document.getElementById('stat-week').textContent = weekCount;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('streak-count').textContent = `🔥 ${streak} day streak`;
+
+            // Mini bar chart
+            const chart = document.getElementById('week-chart');
+            const max = Math.max(...weekDays, 1);
+            chart.innerHTML = weekDays.map((c, i) => {
+                const h = (c / max) * 100;
+                const today = i === 6;
+                return `<div class="flex-1 flex items-end justify-center h-full pb-1"><div style="height:${Math.max(h, 2)}%;width:70%;background:${today ? '#818cf8' : '#334155'};border-radius:3px;transition:all 0.5s" title="${c}"></div></div>`;
+            }).join('');
+        }
+
+        function renderSavedNotes() {
+            const notes = JSON.parse(localStorage.getItem('focus_notes') || '[]');
+            const container = document.getElementById('notes-container');
+            const count = document.getElementById('notes-count');
+            count.textContent = `${notes.length} saved`;
+            if (notes.length === 0) {
+                container.innerHTML = '<div class="text-[10px] text-slate-500 text-center py-4">No saved notes yet. Click ★ on AI responses to save them.</div>';
+                return;
+            }
+            container.innerHTML = notes.slice(-10).reverse().map(n =>
+                `<div class="text-[10px] bg-slate-900/30 rounded-lg p-2 border border-slate-800/40 flex justify-between items-start gap-1">
+                    <span class="text-slate-300 truncate flex-1">${n.text.slice(0, 60)}${n.text.length > 60 ? '...' : ''}</span>
+                    <span class="text-slate-600 shrink-0">${n.date.slice(5)}</span>
+                </div>`
+            ).join('');
+        }
+
+        // Override appendMessageBubble to add save button
+        const origAppend = appendMessageBubble;
+        appendMessageBubble = function(sender, text) {
+            chatHistory.push({ role: sender, text: text, time: new Date().toISOString() });
+            const row = document.createElement('div');
+            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300 mb-4`;
+            if (sender === 'user') {
+                row.innerHTML = `<div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed user-bubble">${escapeHTML(text)}</div>`;
+            } else {
+                row.innerHTML = `<div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-robot text-xs text-indigo-400"></i></div><div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg ai-bubble">${parseMarkdownSimple(text)}</div>`;
+            }
+            chatMessages.appendChild(row);
+            chatAnchor.scrollIntoView({ behavior: 'smooth' });
+            createMessageSparkles(row);
+            addSaveButtonToBubble(row, text, sender);
+        };
+
+        // 5. STRETCH REMINDER OVERLAY
+        let stretchInterval = null;
+        function startStretchReminders() {
+            if (stretchInterval) clearInterval(stretchInterval);
+            stretchInterval = setInterval(() => {
+                if (isTimerActive) {
+                    const overlay = document.createElement('div');
+                    overlay.id = 'stretch-overlay';
+                    overlay.className = 'fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm flex items-center justify-center';
+                    overlay.innerHTML = `
+                        <div class="glass-panel rounded-3xl p-8 text-center max-w-sm mx-4 animate-bounce">
+                            <div class="text-5xl mb-4">🧘</div>
+                            <h3 class="text-lg font-bold text-white mb-2">Time to Stretch!</h3>
+                            <p class="text-sm text-slate-300 mb-4">Stand up, stretch your arms, take a deep breath.</p>
+                            <div class="flex gap-3 justify-center">
+                                <div class="w-12 h-12 bg-indigo-600/30 rounded-2xl flex items-center justify-center text-2xl animate-pulse">🙆</div>
+                                <div class="w-12 h-12 bg-indigo-600/30 rounded-2xl flex items-center justify-center text-2xl animate-pulse" style="animation-delay:0.3s">🤸</div>
+                                <div class="w-12 h-12 bg-indigo-600/30 rounded-2xl flex items-center justify-center text-2xl animate-pulse" style="animation-delay:0.6s">🧎</div>
+                            </div>
+                            <button id="dismiss-stretch" class="mt-6 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl text-sm font-semibold transition">I'm Done!</button>
+                        </div>
+                    `;
+                    document.body.appendChild(overlay);
+                    document.getElementById('dismiss-stretch').addEventListener('click', () => overlay.remove());
+                    setTimeout(() => { const e = document.getElementById('stretch-overlay'); if (e) e.remove(); }, 10000);
+                }
+            }, 1800000);
+        }
+        startStretchReminders();
+
+        // 6. THEME SWITCHER
+        const themes = [
+            { name: 'Indigo', bg: '#0b0f19', accent: '#818cf8', primary: 'indigo' },
+            { name: 'Emerald', bg: '#0a1a10', accent: '#34d399', primary: 'emerald' },
+            { name: 'Rose', bg: '#1a0a0f', accent: '#fb7185', primary: 'rose' },
+            { name: 'Amber', bg: '#1a1408', accent: '#fbbf24', primary: 'amber' },
+            { name: 'Sky', bg: '#0a1420', accent: '#38bdf8', primary: 'sky' }
+        ];
+        let currentTheme = 0;
+
+        const themeBtn = document.createElement('button');
+        themeBtn.id = 'theme-switcher-btn';
+        themeBtn.className = 'p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition';
+        themeBtn.title = 'Switch Theme';
+        themeBtn.innerHTML = '<i class="fa-solid fa-palette"></i>';
+        themeBtn.addEventListener('click', () => {
+            currentTheme = (currentTheme + 1) % themes.length;
+            const t = themes[currentTheme];
+            document.body.style.backgroundColor = t.bg;
+            document.getElementById('glow-l').className = `ambient-glow -top-20 -left-20 bg-${t.primary}-500`;
+            document.getElementById('glow-r').className = `ambient-glow -bottom-20 -right-20 bg-${t.primary}-500`;
+        });
+        document.querySelector('#assistant-header .flex.items-center.gap-2').prepend(themeBtn);
+
+        // 7. AUTO-PLAY NEXT TRACK (hook YT player ended state)
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                stopFallbackAudio();
+                startVisualTapeTrack();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+                stopVisualTapeTrack();
+                currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+                loadAndPlayTrack();
+            } else if (event.data === YT.PlayerState.CUED) {
+            } else {
+                isPlaying = false;
+                stopVisualTapeTrack();
+            }
+            updateCassetteUI();
+        }
+
+        // 8. RECORD FOCUS ON TIMER COMPLETE
+        function beginTimerCountdown() {
+            isTimerActive = true;
+            playIcon.className = "fa-solid fa-pause text-md ml-0";
+            timerLabel.textContent = "Focusing...";
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    isTimerActive = false;
+                    playIcon.className = "fa-solid fa-play text-md ml-1";
+                    timerLabel.textContent = "Complete!";
+                    playFocusTone(523.25, 1.2, "sine");
+                    playFocusTone(659.25, 1.5, "sine");
+                    recordFocusSession();
+                    triggerCongratulationFlash();
+                }
+            }, 1000);
+        }
+
+        // Init stats and notes on load
+        renderFocusStats();
+        renderSavedNotes();
     </script>
 </body>
 </html>
