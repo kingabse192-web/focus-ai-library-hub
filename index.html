@@ -1288,7 +1288,7 @@
         })();
         if (customGeminiKey) {
             customApiKeyInput.value = customGeminiKey;
-            modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
+            modelNameIndicator.textContent = "GEMINI-2.0-FLASH (LIVE)";
         } else {
             modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
         }
@@ -1299,7 +1299,7 @@
             customGeminiKey = keyVal;
             apiKeyPanel.classList.add('hidden');
             if (keyVal) {
-                modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
+                modelNameIndicator.textContent = "GEMINI-2.0-FLASH (LIVE)";
             } else {
                 modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
             }
@@ -1691,7 +1691,7 @@ Here are the key mind-bending ideas made simple:
             }
 
             // Fallback API URL configuration
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${activeKeyToUse}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${activeKeyToUse}`;
 
             try {
                 // If there's no platform key injected and no custom user key, use local brain fallback immediately
