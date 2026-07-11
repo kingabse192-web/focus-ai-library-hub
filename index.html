@@ -240,178 +240,78 @@
                 </div>
             </section>
 
-            <!-- Focus Stats Card -->
-            <section class="glass-panel rounded-2xl p-4 shadow md:col-span-1 flex flex-col justify-between" id="stats-card">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code mb-2 flex items-center justify-between">
+            <!-- STAGE 2: STATS & NOTES -->
+            <section class="glass-panel rounded-2xl p-4 shadow flex flex-col gap-2" id="stats-card">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center justify-between">
                     <span><i class="fa-solid fa-chart-simple text-indigo-400 mr-1.5"></i> Focus Stats</span>
                     <span id="streak-count" class="text-[10px] text-amber-400 font-bold">🔥 0 day streak</span>
                 </h3>
-                <div class="grid grid-cols-3 gap-2 text-center mb-2">
-                    <div class="bg-slate-900/40 rounded-xl p-2">
-                        <div class="text-lg font-bold text-indigo-400 font-mono-code" id="stat-today">0</div>
-                        <div class="text-[8px] text-slate-500 uppercase tracking-wider">Today</div>
-                    </div>
-                    <div class="bg-slate-900/40 rounded-xl p-2">
-                        <div class="text-lg font-bold text-emerald-400 font-mono-code" id="stat-week">0</div>
-                        <div class="text-[8px] text-slate-500 uppercase tracking-wider">This Week</div>
-                    </div>
-                    <div class="bg-slate-900/40 rounded-xl p-2">
-                        <div class="text-lg font-bold text-amber-400 font-mono-code" id="stat-total">0</div>
-                        <div class="text-[8px] text-slate-500 uppercase tracking-wider">Total</div>
-                    </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-slate-900/40 rounded-xl p-2"><div class="text-lg font-bold text-indigo-400 font-mono-code" id="stat-today">0</div><div class="text-[8px] text-slate-500 uppercase tracking-wider">Today</div></div>
+                    <div class="bg-slate-900/40 rounded-xl p-2"><div class="text-lg font-bold text-emerald-400 font-mono-code" id="stat-week">0</div><div class="text-[8px] text-slate-500 uppercase tracking-wider">Week</div></div>
+                    <div class="bg-slate-900/40 rounded-xl p-2"><div class="text-lg font-bold text-amber-400 font-mono-code" id="stat-total">0</div><div class="text-[8px] text-slate-500 uppercase tracking-wider">Total</div></div>
                 </div>
                 <div class="h-8 bg-slate-900/30 rounded-xl overflow-hidden flex" id="week-chart"></div>
             </section>
+            <section class="glass-panel rounded-2xl p-4 shadow flex flex-col gap-2" id="notes-card">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center justify-between">
+                    <span><i class="fa-solid fa-bookmark text-indigo-400 mr-1.5"></i> Saved Q&A</span>
+                    <span id="notes-count" class="text-[10px] text-slate-500">0</span>
+                </h3>
+                <div id="notes-container" class="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+                    <div class="text-[10px] text-slate-500 text-center py-3">Click ★ on AI replies to save them.</div>
+                </div>
+            </section>
 
-            <!-- Saved Notes Card -->
-            <section class="glass-panel rounded-2xl p-4 shadow md:col-span-1 flex flex-col justify-between" id="notes-card">
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code mb-2 flex items-center justify-between">
-                        <span><i class="fa-solid fa-bookmark text-indigo-400 mr-1.5"></i> Saved Q&A</span>
-                        <span id="notes-count" class="text-[10px] text-slate-500">0 saved</span>
-                    </h3>
-                    <div id="notes-container" class="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                        <div class="text-[10px] text-slate-500 text-center py-4">No saved notes yet. Click ★ on AI responses to save them.</div>
+            <!-- STAGE 3: MUSIC DECK -->
+            <section id="audio-card" class="glass-panel rounded-3xl p-5 shadow-xl transition-all duration-500 flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code"><i class="fa-solid fa-compact-disc text-indigo-400 mr-1.5"></i>Mixtape Deck</h2>
+                    <span class="text-[10px] text-slate-500 font-mono-code" id="audio-time-label">0:00</span>
+                </div>
+                <div class="flex items-center gap-3 bg-slate-900/50 rounded-2xl p-3 border border-slate-800/60">
+                    <div class="flex items-center gap-2 w-8 h-8" id="left-reel">
+                        <div class="w-7 h-7 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center"><div class="w-2.5 h-2.5 bg-slate-700 rounded-full"></div></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold text-slate-200 truncate" id="current-track-title">Loading tracks...</div>
+                        <div class="text-[10px] text-slate-400 flex items-center gap-2"><span id="track-artist">Lofi & Jazz</span><span class="text-amber-500" id="audio-tempo-tag">Cozy Vibe</span></div>
+                    </div>
+                    <div class="flex items-center gap-2" id="right-reel">
+                        <div class="w-7 h-7 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center"><div class="w-2.5 h-2.5 bg-slate-700 rounded-full"></div></div>
                     </div>
                 </div>
+                <div class="h-1 bg-slate-800 rounded-full overflow-hidden"><div class="h-full bg-indigo-500 rounded transition-all" id="cassette-progress-bar" style="width:0%"></div></div>
+                <div class="flex flex-col gap-1 bg-slate-950/40 rounded-2xl border border-slate-800 p-2 max-h-[140px] overflow-y-auto" id="tracklist-picker"></div>
+                <form id="custom-track-form" class="flex gap-1.5">
+                    <input type="text" id="custom-track-input" placeholder="YouTube link or ID" class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-3 rounded-xl font-semibold">Load</button>
+                </form>
+                <div class="flex items-center gap-2">
+                    <button id="audio-prev" class="p-2 bg-slate-800/60 hover:bg-slate-700 rounded-xl text-slate-300"><i class="fa-solid fa-backward-step text-xs"></i></button>
+                    <button id="audio-play-pause" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2"><i class="fa-solid fa-play text-xs" id="cassette-play-icon"></i><span id="cassette-play-text">Play</span></button>
+                    <button id="audio-next" class="p-2 bg-slate-800/60 hover:bg-slate-700 rounded-xl text-slate-300"><i class="fa-solid fa-forward-step text-xs"></i></button>
+                    <div class="flex items-center gap-1.5 pl-1 border-l border-slate-700/50">
+                        <i class="fa-solid fa-volume-high text-slate-500 text-[10px]"></i>
+                        <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="0.5" class="w-14 text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAGE 3: AMBIENT MIXER -->
+            <section id="ambient-card" class="glass-panel rounded-3xl p-4 shadow-xl transition-all duration-500 flex items-center gap-3">
+                <i class="fa-solid fa-cloud-rain text-indigo-400 text-sm"></i>
+                <div class="flex gap-1.5 flex-1">
+                    <button data-ambient="rain" class="ambient-btn px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 hover:bg-indigo-600/20 text-[10px] font-semibold">☔ Rain</button>
+                    <button data-ambient="fire" class="ambient-btn px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 hover:bg-amber-600/20 text-[10px] font-semibold">🔥 Fire</button>
+                    <button data-ambient="cafe" class="ambient-btn px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 hover:bg-emerald-600/20 text-[10px] font-semibold">☕ Cafe</button>
+                </div>
+                <span id="ambient-active-label" class="text-[9px] text-slate-500 font-mono-code">Off</span>
+                <input id="ambient-volume" type="range" min="0" max="1" step="0.05" value="0.3" class="w-14 text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
             </section>
         </div>
 
-                <!-- Custom Cassette Deck Illustration -->
-                <div class="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col items-center justify-between relative overflow-hidden shadow-inner" id="cassette-deck">
-                    <div class="w-full flex justify-between items-center px-1 mb-2">
-                        <span class="text-[9px] font-mono-code text-slate-500 font-bold">SIDE A</span>
-                        <div class="h-1 flex-1 mx-3 bg-indigo-500/30 rounded">
-                            <div class="h-full bg-indigo-500 rounded transition-all duration-300" id="cassette-progress-bar" style="width: 0%;"></div>
-                        </div>
-                        <span class="text-[9px] font-mono-code text-slate-500" id="audio-time-label">0:00</span>
-                    </div>
-
-                    <!-- Cassette body visual representation -->
-                    <div class="w-full bg-slate-800 border-2 border-slate-600 rounded-lg p-3 flex flex-col justify-between relative shadow-md" style="height: 105px;">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-mono-code text-slate-400 tracking-tight select-none">LOFI & JAZZ MIXTAPE</span>
-                            <span class="text-[9px] font-mono-code text-indigo-400 font-bold">NR [C]</span>
-                        </div>
-
-                        <!-- Center Window with Reels -->
-                        <div class="w-4/5 mx-auto h-10 bg-slate-900 border border-slate-700 rounded flex justify-around items-center px-4 relative overflow-hidden">
-                            <!-- Left Reel -->
-                            <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative" id="left-reel">
-                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
-                                <div class="absolute w-full h-[1px] bg-slate-500"></div>
-                                <div class="absolute w-[1px] h-full bg-slate-500"></div>
-                            </div>
-                            <!-- Small transparent tape window display -->
-                            <div class="h-full w-8 bg-slate-950/80 border-x border-slate-800 flex items-center justify-center">
-                                <div class="w-1.5 h-6 bg-amber-500/20 rounded-full" id="tape-shadow"></div>
-                            </div>
-                            <!-- Right Reel -->
-                            <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative" id="right-reel">
-                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
-                                <div class="absolute w-full h-[1px] bg-slate-500"></div>
-                                <div class="absolute w-[1px] h-full bg-slate-500"></div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-center mt-1 text-[8px] font-mono-code text-slate-500">
-                            <span>A: HI-FI ANALOG</span>
-                            <span>TAP TO SELECT TRACK</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current Track Display Card -->
-                <div class="p-3.5 bg-slate-900/50 border border-slate-800/80 rounded-2xl flex flex-col gap-1.5 shadow-inner">
-                    <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-bold font-mono-code flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full inline-block" id="track-pulse"></span> Now Playing
-                    </div>
-                    <div class="text-xs font-semibold text-slate-200 truncate" id="current-track-title">
-                        Loading study tracks...
-                    </div>
-                    <div class="text-[10px] text-slate-400 flex justify-between items-center">
-                        <span id="track-artist">Lofi & Jazz Studio</span>
-                        <span class="font-mono-code text-amber-500" id="audio-tempo-tag">Cozy Vibe</span>
-                    </div>
-                </div>
-
-                <!-- Interactive Track Selection Menu -->
-                <div class="flex flex-col gap-1 bg-slate-950/40 rounded-2xl border border-slate-800 p-2 max-h-[180px] overflow-y-auto" id="tracklist-picker">
-                    <!-- Dynamic List of Tracks will be rendered here by JS -->
-                </div>
-
-                <!-- Load Custom YouTube Link / ID Drawer -->
-                <div class="p-2.5 bg-slate-900/40 border border-slate-800 rounded-2xl">
-                    <span class="text-[10px] font-mono-code text-slate-400 flex items-center gap-1.5 mb-1.5">
-                        <i class="fa-solid fa-plus text-indigo-400"></i> Load Custom YouTube Track
-                    </span>
-                    <form id="custom-track-form" class="flex gap-1.5">
-                        <input type="text" id="custom-track-input" placeholder="Paste YouTube link or Video ID" class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono-code">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-3 rounded-xl transition font-semibold tracking-wide">Load</button>
-                    </form>
-                </div>
-
-                <!-- Playback Controllers -->
-                <div class="grid grid-cols-5 gap-1.5">
-                    <button id="audio-prev" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex justify-center items-center">
-                        <i class="fa-solid fa-backward-step text-xs"></i>
-                    </button>
-                    <button id="audio-play-pause" class="col-span-3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wider uppercase transition active:scale-95 flex justify-center items-center gap-2 shadow-lg shadow-indigo-600/10">
-                        <i class="fa-solid fa-play text-xs" id="cassette-play-icon"></i> <span id="cassette-play-text">Play Tape</span>
-                    </button>
-                    <button id="audio-next" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex justify-center items-center">
-                        <i class="fa-solid fa-forward-step text-xs"></i>
-                    </button>
-                </div>
-
-                <!-- Volume and Crackle slider controls -->
-                <div class="grid grid-cols-2 gap-3 mt-1.5">
-                    <div class="flex flex-col gap-1 p-2 bg-slate-900/30 border border-slate-800/60 rounded-xl">
-                        <span class="text-[9px] font-mono-code text-slate-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-volume-high text-indigo-400"></i> Tape Volume
-                        </span>
-                        <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="0.5" class="w-full text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
-                    </div>
-                    <div class="flex flex-col gap-1 p-2 bg-slate-900/30 border border-slate-800/60 rounded-xl">
-                        <span class="text-[9px] font-mono-code text-slate-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-nodes text-amber-500"></i> Analog Crackle
-                        </span>
-                        <input id="audio-crackle" type="range" min="0" max="1" step="0.05" value="0.4" class="w-full text-amber-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
-                    </div>
-                </div>
-            </section>
-
-            <!-- STAGE 3: AMBIENT SOUND MIXER (Rain, Fireplace, Cafe) -->
-            <section id="ambient-card" class="glass-panel rounded-3xl p-6 shadow-xl transition-all duration-500 flex flex-col gap-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-rain text-indigo-400" id="ambient-icon-color"></i> Ambient Mixer
-                    </h2>
-                    <span id="ambient-active-label" class="text-[9px] font-mono-code text-slate-500">None</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <button data-ambient="rain" class="ambient-btn flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40 hover:bg-indigo-600/20 hover:border-indigo-500/30 transition text-slate-400 hover:text-indigo-300">
-                        <i class="fa-solid fa-cloud-rain text-lg"></i>
-                        <span class="text-[9px] font-semibold uppercase tracking-wider">Rain</span>
-                    </button>
-                    <button data-ambient="fire" class="ambient-btn flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40 hover:bg-amber-600/20 hover:border-amber-500/30 transition text-slate-400 hover:text-amber-300">
-                        <i class="fa-solid fa-fire text-lg"></i>
-                        <span class="text-[9px] font-semibold uppercase tracking-wider">Fireplace</span>
-                    </button>
-                    <button data-ambient="cafe" class="ambient-btn flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40 hover:bg-emerald-600/20 hover:border-emerald-500/30 transition text-slate-400 hover:text-emerald-300">
-                        <i class="fa-solid fa-mug-hot text-lg"></i>
-                        <span class="text-[9px] font-semibold uppercase tracking-wider">Cafe</span>
-                    </button>
-                </div>
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-volume-low text-slate-500 text-[10px]"></i>
-                    <input id="ambient-volume" type="range" min="0" max="1" step="0.05" value="0.3" class="flex-1 text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
-                    <i class="fa-solid fa-volume-high text-slate-500 text-[10px]"></i>
-                </div>
-            </section>
-        </div>
-
-        <!-- COLUMN RIGHT: Gemini Intelligent Study Assistant (7 cols) -->
+        <!-- COLUMN RIGHT: Gemini Assistant -->
         <div class="lg:col-span-7 flex flex-col h-[600px] lg:h-auto min-h-[500px] glass-panel rounded-3xl overflow-hidden shadow-2xl relative transition-all duration-500" id="assistant-column">
             
             <!-- Candlelight Mode Flicker Screen Layer -->
@@ -826,6 +726,13 @@
                 artist: "Patrick Watson",
                 tempo: "Slowed + Reverb",
                 genre: "Piano Ballad"
+            },
+            {
+                id: "mQR0bXO_yI8",
+                title: "14, Fly Me To The Moon",
+                artist: "Frank Sinatra",
+                tempo: "Classic Jazz Standard",
+                genre: "Cozy Jazz"
             }
         ];
 
@@ -989,7 +896,7 @@
                     crackleCtx.resume();
                 }
 
-                const crackleSliderVal = parseFloat(document.getElementById('audio-crackle').value);
+                const crackleSliderVal = 0.2;
                 crackleGain.gain.setValueAtTime(crackleSliderVal * 0.45, crackleCtx.currentTime);
             } catch (e) {
                 console.warn("Unable to start cassette tape deck crackle node:", e);
@@ -1007,7 +914,7 @@
         const prevTapeBtn = document.getElementById('audio-prev');
         const nextTapeBtn = document.getElementById('audio-next');
         const volumeSlider = document.getElementById('audio-volume');
-        const crackleSlider = document.getElementById('audio-crackle');
+        const crackleSlider = null;
         const trackTitle = document.getElementById('current-track-title');
         const trackArtist = document.getElementById('track-artist');
         const tempoTag = document.getElementById('audio-tempo-tag');
@@ -1163,13 +1070,6 @@
             const vol = parseFloat(e.target.value);
             if (isYTApiReady && ytPlayer) {
                 ytPlayer.setVolume(vol * 100);
-            }
-        });
-
-        crackleSlider.addEventListener('input', (e) => {
-            const crackleVal = parseFloat(e.target.value);
-            if (crackleGain && crackleCtx) {
-                crackleGain.gain.setValueAtTime(crackleVal * 0.45, crackleCtx.currentTime);
             }
         });
 
