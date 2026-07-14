@@ -111,6 +111,30 @@
             cursor: pointer;
             box-shadow: 0 0 8px currentColor;
         }
+
+        /* Focus Mode: hide everything except timer + cassette */
+        .focus-mode header,
+        .focus-mode #assistant-column,
+        .focus-mode footer {
+            display: none !important;
+        }
+        .focus-mode #left-column {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .focus-mode main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .focus-mode #focus-icon { transform: rotate(180deg); }
+        #focus-exit-btn {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden transition-all duration-700 relative">
@@ -143,6 +167,12 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="desk-status-dot"></span>
                 <span class="text-xs text-slate-300 font-medium font-mono-code" id="desk-text">Session: Library Table 4</span>
             </div>
+
+            <!-- FOCUS MODE TOGGLE BUTTON -->
+            <button id="focus-mode-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 text-xs font-semibold tracking-wide transition-all duration-300 shadow-md">
+                <i class="fa-solid fa-expand text-indigo-400 mr-1" id="focus-icon"></i>
+                <span id="focus-text">Focus</span>
+            </button>
 
             <!-- MEBERAT TEFTA (Power Cut Indicator) Toggle Button -->
             <button id="power-toggle-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 text-xs font-semibold tracking-wide transition-all duration-300 shadow-md animate-bounce">
@@ -504,6 +534,11 @@
             Custom-Built Library Companion Platform &copy; 2026 Focus Dashboard
         </div>
     </footer>
+
+    <!-- Exit Focus Mode button (hidden by default, shown in focus mode) -->
+    <button id="focus-exit-btn" class="hidden bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg transition-all duration-300 border border-rose-400/50">
+        <i class="fa-solid fa-compress mr-1.5"></i>Exit Focus
+    </button>
 
     <script>
         // --- POMODORO TIMER STATE & CODE LOGIC ---
@@ -1169,6 +1204,24 @@
         }
 
         powerToggleBtn.addEventListener('click', toggleThemeMode);
+
+        // --- FOCUS MODE TOGGLE ---
+        const focusModeBtn = document.getElementById('focus-mode-btn');
+        const focusExitBtn = document.getElementById('focus-exit-btn');
+        let isFocusMode = false;
+
+        function toggleFocusMode() {
+            isFocusMode = !isFocusMode;
+            document.body.classList.toggle('focus-mode', isFocusMode);
+            focusExitBtn.classList.toggle('hidden', !isFocusMode);
+            document.getElementById('focus-text').textContent = isFocusMode ? 'Exit Focus' : 'Focus';
+        }
+
+        focusModeBtn.addEventListener('click', toggleFocusMode);
+        focusExitBtn.addEventListener('click', toggleFocusMode);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isFocusMode) toggleFocusMode();
+        });
 
         function triggerCongratulationFlash() {
             toggleThemeMode();
