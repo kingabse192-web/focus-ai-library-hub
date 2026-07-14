@@ -12,8 +12,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for beautiful icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- YouTube IFrame API script -->
-    <script src="https://www.youtube.com/iframe_api"></script>
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b0f19">
@@ -650,24 +648,9 @@
 
         // --- STREAMING_CHUNK: Integrating user choice and jazz tracks to playlist... ---
         // --- REAL YOUTUBE PLAYER & CASSETTE AUDIO CONTROLLER ---
-        let ytPlayer = null;
-        let isYTApiReady = false;
         let isPlaying = false;
-        let currentTrackIndex = 0;
+        let usingDirectEmbed = false;
         let progressInterval = null;
-
-        // Init audio context on first user click (required by browsers)
-        document.addEventListener('click', () => {
-            if (!sharedAudioCtx) {
-                try {
-                    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    audioCtxInitialized = true;
-                } catch(e) {}
-            }
-            if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
-                sharedAudioCtx.resume();
-            }
-        }, { once: true });
 
         // The tracks list featuring the exact songs requested, plus three highly requested classic jazz study selections
         const tracks = [
@@ -771,56 +754,22 @@
             }
         ];
 
-        // This built-in YouTube callback registers automatically when the script loads
-        function onYouTubeIframeAPIReady() {
-            ytPlayer = new YT.Player('yt-player', {
-                height: '100',
-                width: '100',
-                videoId: tracks[0].id,
-                playerVars: {
-                    'autoplay': 0,
-                    'controls': 0,
-                    'disablekb': 1,
-                    'fs': 0,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'showinfo': 0
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
-                }
-            });
+        function embedTrack() {
+            const container = document.getElementById('yt-player');
+            const videoId = tracks[currentTrackIndex].id;
+            container.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&showinfo=0&loop=0`;
+            iframe.allow = 'autoplay';
+            iframe.style.border = 'none';
+            container.appendChild(iframe);
         }
 
-        function onPlayerReady(event) {
-            isYTApiReady = true;
-            const volumeVal = parseFloat(document.getElementById('audio-volume').value);
-            ytPlayer.setVolume(volumeVal * 100);
-            renderTracklistPicker();
-            updateCassetteUI();
-        }
-
-        function onPlayerError(event) {
-            console.warn("YouTube player error:", event.data);
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                isPlaying = true;
-                startVisualTapeTrack();
-            } else if (event.data === YT.PlayerState.ENDED) {
-                isPlaying = false;
-                stopVisualTapeTrack();
-                currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-                loadAndPlayTrack();
-            } else if (event.data === YT.PlayerState.CUED) {
-            } else {
-                isPlaying = false;
-                stopVisualTapeTrack();
-            }
-            updateCassetteUI();
+        function stopEmbed() {
+            const container = document.getElementById('yt-player');
+            container.innerHTML = '';
         }
 
         // --- RETRO TAPE ANALOG NOISE GENERATOR (Runs parallel to the real YouTube music) ---
@@ -956,22 +905,6 @@
             rightReel.classList.add('spin-reel');
             document.getElementById('track-pulse').classList.add('animate-ping');
             playAnalogCrackle();
-
-            if (progressInterval) clearInterval(progressInterval);
-            progressInterval = setInterval(() => {
-                if (isYTApiReady && ytPlayer && isPlaying) {
-                    const currentSecs = Math.floor(ytPlayer.getCurrentTime());
-                    const duration = Math.max(ytPlayer.getDuration(), 1);
-                    
-                    const mins = Math.floor(currentSecs / 60);
-                    const secs = currentSecs % 60;
-                    document.getElementById('audio-time-label').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-                    
-                    const progressPercent = (currentSecs / duration) * 100;
-                    document.getElementById('cassette-progress-bar').style.width = `${progressPercent}%`;
-                    document.getElementById('cassette-progress-text').textContent = `${Math.round(progressPercent)}%`;
-                }
-            }, 500);
         }
 
         function stopVisualTapeTrack() {
@@ -1001,20 +934,18 @@
         }
 
         function loadAndPlayTrack() {
-            if (isYTApiReady && ytPlayer) {
-                ytPlayer.loadVideoById(tracks[currentTrackIndex].id);
-                isPlaying = true;
-                updateCassetteUI();
-                startVisualTapeTrack();
-            }
+            embedTrack();
+            isPlaying = true;
+            updateCassetteUI();
+            startVisualTapeTrack();
+            usingDirectEmbed = true;
         }
 
         playPauseTapeBtn.addEventListener('click', () => {
             if (isPlaying) {
-                if (isYTApiReady && ytPlayer) {
-                    ytPlayer.pauseVideo();
-                }
+                stopEmbed();
                 isPlaying = false;
+                usingDirectEmbed = false;
                 stopVisualTapeTrack();
                 updateCassetteUI();
             } else {
@@ -1024,19 +955,26 @@
 
         nextTapeBtn.addEventListener('click', () => {
             currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-            loadAndPlayTrack();
+            if (usingDirectEmbed) {
+                loadAndPlayTrack();
+            } else {
+                updateCassetteUI();
+                renderTracklistPicker();
+            }
         });
 
         prevTapeBtn.addEventListener('click', () => {
             currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
-            loadAndPlayTrack();
+            if (usingDirectEmbed) {
+                loadAndPlayTrack();
+            } else {
+                updateCassetteUI();
+                renderTracklistPicker();
+            }
         });
 
         volumeSlider.addEventListener('input', (e) => {
             const vol = parseFloat(e.target.value);
-            if (isYTApiReady && ytPlayer) {
-                ytPlayer.setVolume(vol * 100);
-            }
         });
 
 
