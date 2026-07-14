@@ -660,139 +660,136 @@
         setTimeout(() => {
             if (!isYTApiReady) {
                 document.getElementById('current-track-title').textContent = tracks[0]?.title + " (Offline Mode)";
-                useFallbackAudio();
+                try {
+                    initAudioCtx();
+                } catch(e) {}
                 updateCassetteUI();
             }
         }, 6000);
 
-        // Also try to init fallback on first user tap anywhere
+        // Init audio context and fallback on first user tap anywhere
         document.addEventListener('click', () => {
-            if (!isYTApiReady && !fallbackIsPlaying) {
+            if (!isYTApiReady) {
                 useFallbackAudio();
                 updateCassetteUI();
+            } else {
+                try { initAudioCtx(); } catch(e) {}
             }
         }, { once: true });
 
         // The tracks list featuring the exact songs requested, plus three highly requested classic jazz study selections
         const tracks = [
             {
+                id: "u85J6d-c3To",
+                title: "1, misery. (slowed)",
+                artist: "pupsies",
+                tempo: "Slowed",
+                genre: "Lofi"
+            },
+            {
                 id: "_frCU7D9n-Q",
-                title: "1, The Night We Met",
+                title: "2, The Night We Met",
                 artist: "Lord Huron",
                 tempo: "Indie Folk",
                 genre: "Cozy Jazz"
             },
             {
                 id: "veDgWww1hIQ",
-                title: "2, Blue In Green (Kind Of Blue)",
+                title: "3, Blue In Green (Kind Of Blue)",
                 artist: "Miles Davis feat. John Coltrane",
                 tempo: "Classic Jazz Standard",
                 genre: "Cozy Jazz"
             },
             {
-                id: "u85J6d-c3To",
-                title: "3, misery. (slowed)",
-                artist: "pupsies",
-                tempo: "Slowed",
-                genre: "Lofi"
-            },
-            {
-                id: "H_LONPQUV5k",
-                title: "4, misery . . .",
-                artist: "pupsies",
-                tempo: "Slowed + Reverb",
-                genre: "Lofi"
-            },
-            {
-                id: "tNHXDNaNqsU",
-                title: "5, Take Me (To The Moon)",
-                artist: "Ian Asher",
-                tempo: "Dreamy Piano",
-                genre: "Cozy Jazz"
-            },
-            {
                 id: "_ZRJrAHprBM",
-                title: "6, I Fall In Love Too Easily",
+                title: "4, I Fall In Love Too Easily",
                 artist: "Chet Baker Sings",
                 tempo: "Vocal Jazz Classic",
                 genre: "Cozy Jazz"
             },
             {
                 id: "vkjAuJJUKRA",
-                title: "7, Slow Rainy Jazz Cafe BGM",
+                title: "5, Slow Rainy Jazz Cafe BGM",
                 artist: "Night Lounge Study Session",
                 tempo: "Rainy Cafe Ambiance",
                 genre: "Cozy Jazz"
             },
             {
                 id: "qMxXr3z39p8",
-                title: "8, Waltz For Debby",
+                title: "6, Waltz For Debby",
                 artist: "Bill Evans Trio",
                 tempo: "Piano Jazz",
                 genre: "Cozy Jazz"
             },
             {
                 id: "gwnM1LqNM9s",
-                title: "9, My Favorite Things",
+                title: "7, My Favorite Things",
                 artist: "John Coltrane",
                 tempo: "Classic Jazz",
                 genre: "Cozy Jazz"
             },
             {
                 id: "3d27Ixa8sN0",
-                title: "10, So What",
+                title: "8, So What",
                 artist: "Miles Davis",
                 tempo: "Cool Jazz Standard",
                 genre: "Cozy Jazz"
             },
             {
                 id: "e9Xd1JpPXmQ",
-                title: "11, Take Five",
+                title: "9, Take Five",
                 artist: "Dave Brubeck Quartet",
                 tempo: "Classic Jazz Standard",
                 genre: "Cozy Jazz"
             },
             {
                 id: "tgJw_HkQjoA",
-                title: "12, My Funny Valentine",
+                title: "10, My Funny Valentine",
                 artist: "Chet Baker",
                 tempo: "Vocal Jazz Ballad",
                 genre: "Cozy Jazz"
             },
             {
                 id: "n2N9j0bk5pw",
-                title: "13, You Look Good To Me",
+                title: "11, You Look Good To Me",
                 artist: "Oscar Peterson Trio",
                 tempo: "Uptempo Jazz",
                 genre: "Cozy Jazz"
             },
             {
                 id: "27Xf3F4eaUs",
-                title: "14, Tell Me Why I'm Waiting x Shiloh",
+                title: "12, Tell Me Why I'm Waiting x Shiloh",
                 artist: "Fasetya x Shiloh Dynasty",
                 tempo: "Slowed + Reverb",
                 genre: "Lofi"
             },
             {
                 id: "1mhez65oSTI",
-                title: "15, i was only temporary",
+                title: "13, i was only temporary",
                 artist: "my head is empty",
                 tempo: "Ultra Slowed + Reverb",
                 genre: "Lofi"
             },
             {
                 id: "FHBo3wTOmfs",
-                title: "16, Powfu - death bed",
+                title: "14, Powfu - death bed",
                 artist: "Powfu ft. beabadoobee",
                 tempo: "Slowed + Reverb",
                 genre: "Lofi"
             },
             {
                 id: "73tlKB7sRDA",
-                title: "17, je te laisserai des mots",
+                title: "15, je te laisserai des mots",
                 artist: "Patrick Watson",
                 tempo: "Slowed + Reverb",
                 genre: "Piano Ballad"
+            },
+            {
+                id: "tNHXDNaNqsU",
+                title: "16, Take Me (To The Moon)",
+                artist: "Ian Asher",
+                tempo: "Dreamy Piano",
+                genre: "Cozy Jazz"
             }
         ];
 
@@ -853,22 +850,31 @@
         }
 
         // --- FALLBACK AUDIO ENGINE (When YouTube fails - generates lo-fi tones) ---
-        let fallbackCtx = null;
+        let sharedAudioCtx = null;
         let fallbackOscillators = [];
         let fallbackGain = null;
         let fallbackIsPlaying = false;
         let fallbackInterval = null;
+        let audioCtxInitialized = false;
+
+        function initAudioCtx() {
+            if (audioCtxInitialized && sharedAudioCtx) return sharedAudioCtx;
+            sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtxInitialized = true;
+            return sharedAudioCtx;
+        }
 
         function useFallbackAudio() {
             if (fallbackIsPlaying) return;
             try {
-                if (!fallbackCtx) {
-                    fallbackCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    fallbackGain = fallbackCtx.createGain();
-                    fallbackGain.gain.setValueAtTime(0.08, fallbackCtx.currentTime);
-                    fallbackGain.connect(fallbackCtx.destination);
+                const ctx = initAudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                if (!fallbackGain) {
+                    fallbackGain = ctx.createGain();
+                    fallbackGain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    fallbackGain.connect(ctx.destination);
                 }
-                if (fallbackCtx.state === 'suspended') fallbackCtx.resume();
 
                 fallbackIsPlaying = true;
                 isPlaying = true;
@@ -879,13 +885,13 @@
                 let noteIndex = 0;
 
                 function playNextNote() {
-                    if (!fallbackIsPlaying || !fallbackCtx) return;
-                    const osc = fallbackCtx.createOscillator();
-                    const noteGain = fallbackCtx.createGain();
+                    if (!fallbackIsPlaying || !ctx) return;
+                    const osc = ctx.createOscillator();
+                    const noteGain = ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], fallbackCtx.currentTime);
-                    const now = fallbackCtx.currentTime;
-                    noteGain.gain.setValueAtTime(0.3, now);
+                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], ctx.currentTime);
+                    const now = ctx.currentTime;
+                    noteGain.gain.setValueAtTime(0.5, now);
                     noteGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
                     osc.connect(noteGain);
                     noteGain.connect(fallbackGain);
@@ -898,7 +904,7 @@
                 const tempo = Math.max(400, 600 - (currentTrackIndex * 30));
                 playNextNote();
                 fallbackInterval = setInterval(playNextNote, tempo);
-                document.getElementById('current-track-title').textContent = tracks[currentTrackIndex]?.title + " (Fallback Audio)";
+                document.getElementById('current-track-title').textContent = (tracks[currentTrackIndex]?.title || 'Track') + " (Fallback Audio)";
             } catch (e) {
                 console.warn("Fallback audio failed:", e);
             }
@@ -917,55 +923,51 @@
         }
 
         // --- RETRO TAPE ANALOG NOISE GENERATOR (Runs parallel to the real YouTube music) ---
-        let crackleCtx = null;
         let crackleNode = null;
         let crackleGain = null;
 
         function playAnalogCrackle() {
             try {
-                if (!crackleCtx) {
-                    crackleCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    crackleGain = crackleCtx.createGain();
-                    
-                    const bufferSize = crackleCtx.sampleRate * 2;
-                    const buffer = crackleCtx.createBuffer(1, bufferSize, crackleCtx.sampleRate);
+                const ctx = initAudioCtx();
+                if (!crackleNode) {
+                    crackleGain = ctx.createGain();
+
+                    const bufferSize = ctx.sampleRate * 2;
+                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                     const data = buffer.getChannelData(0);
-                    
+
                     for (let i = 0; i < bufferSize; i++) {
                         const whiteNoise = Math.random() * 2 - 1;
                         const cracklePop = Math.random() > 0.9997 ? (Math.random() > 0.5 ? 0.35 : -0.35) : 0;
                         data[i] = whiteNoise * 0.035 + cracklePop;
                     }
 
-                    const source = crackleCtx.createBufferSource();
+                    const source = ctx.createBufferSource();
                     source.buffer = buffer;
                     source.loop = true;
 
-                    const biquadFilter = crackleCtx.createBiquadFilter();
+                    const biquadFilter = ctx.createBiquadFilter();
                     biquadFilter.type = "bandpass";
-                    biquadFilter.frequency.setValueAtTime(1200, crackleCtx.currentTime);
-                    biquadFilter.Q.setValueAtTime(1.0, crackleCtx.currentTime);
+                    biquadFilter.frequency.setValueAtTime(1200, ctx.currentTime);
+                    biquadFilter.Q.setValueAtTime(1.0, ctx.currentTime);
 
                     source.connect(biquadFilter);
                     biquadFilter.connect(crackleGain);
-                    crackleGain.connect(crackleCtx.destination);
+                    crackleGain.connect(ctx.destination);
                     source.start();
+                    crackleNode = source;
                 }
 
-                if (crackleCtx.state === 'suspended') {
-                    crackleCtx.resume();
-                }
-
-                const crackleSliderVal = 0.2;
-                crackleGain.gain.setValueAtTime(crackleSliderVal * 0.45, crackleCtx.currentTime);
+                if (ctx.state === 'suspended') ctx.resume();
+                crackleGain.gain.setValueAtTime(0.2 * 0.45, ctx.currentTime);
             } catch (e) {
                 console.warn("Unable to start cassette tape deck crackle node:", e);
             }
         }
 
         function stopAnalogCrackle() {
-            if (crackleGain) {
-                crackleGain.gain.setValueAtTime(0, crackleCtx?.currentTime || 0);
+            if (crackleGain && sharedAudioCtx) {
+                crackleGain.gain.setValueAtTime(0, sharedAudioCtx.currentTime || 0);
             }
         }
 
@@ -1098,6 +1100,8 @@
                 isPlaying = true;
                 updateCassetteUI();
                 startVisualTapeTrack();
+            } else {
+                useFallbackAudio();
             }
         }
 
@@ -1132,6 +1136,9 @@
             const vol = parseFloat(e.target.value);
             if (isYTApiReady && ytPlayer) {
                 ytPlayer.setVolume(vol * 100);
+            }
+            if (sharedAudioCtx && fallbackGain) {
+                fallbackGain.gain.setValueAtTime(vol * 0.3, sharedAudioCtx.currentTime);
             }
         });
 
