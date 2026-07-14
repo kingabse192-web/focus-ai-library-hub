@@ -1225,7 +1225,7 @@
 
         // Using the live API key directly from api.PNG as the default active key
         let customGeminiKey = localStorage.getItem('focus_companion_key') || (function(){
-            const k = [65,81,46,65,98,56,82,78,54,74,86,89,53,115,49,118,76,84,78,54,109,86,66,78,105,67,120,98,103,50,114,118,114,56,45,102,51,99,88,104,45,67,54,72,48,74,81,70,82,97,45,109,81];
+            const k = [65,81,46,65,98,56,82,78,54,76,86,70,81,70,90,69,116,102,56,74,70,103,110,75,76,108,90,101,68,71,76,86,90,71,107,114,75,122,103,117,49,86,105,105,79,89,66,69,49,85,52,86,119];
             return String.fromCharCode(...k);
         })();
         if (customGeminiKey) {
