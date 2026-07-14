@@ -132,7 +132,7 @@
     <div id="glow-r" class="ambient-glow -bottom-20 -right-20 bg-emerald-500"></div>
 
     <!-- Hidden YouTube Player Container (Used to stream actual songs cleanly) -->
-    <div id="yt-player-container" class="absolute w-[1px] h-[1px] opacity-0 pointer-events-none overflow-hidden">
+    <div id="yt-player-container" class="fixed -left-[9999px] top-0 w-[340px] h-[200px] opacity-0 pointer-events-none">
         <div id="yt-player"></div>
     </div>
 
@@ -1018,14 +1018,7 @@
                 stopVisualTapeTrack();
                 updateCassetteUI();
             } else {
-                if (isYTApiReady && ytPlayer) {
-                    ytPlayer.playVideo();
-                } else {
-                    loadAndPlayTrack();
-                }
-                isPlaying = true;
-                updateCassetteUI();
-                startVisualTapeTrack();
+                loadAndPlayTrack();
             }
         });
 
