@@ -7,16 +7,13 @@
     <!-- Google Fonts: Inter, Fira Code, cozy handwritten Caveat font and elegant serif Playfair -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for beautiful icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PWA manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0b0f19">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Focus Hub">
+    <!-- YouTube IFrame API script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     
     <style>
         body {
@@ -57,14 +54,6 @@
             animation: flicker 1.8s infinite ease-in-out;
             transform-origin: bottom center;
         }
-        /* Sparkle animation for chat messages */
-        @keyframes sparkle-fade {
-            0% { transform: scale(0) translateY(0); opacity: 1; }
-            50% { transform: scale(1.5) translateY(-20px); opacity: 0.8; }
-            100% { transform: scale(0) translateY(-40px); opacity: 0; }
-        }
-        .user-bubble, .ai-bubble { position: relative; overflow: hidden; }
-        #chat-messages-container { scroll-behavior: smooth; }
         /* Spinning Cassette tape reels animation */
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -130,7 +119,7 @@
     <div id="glow-r" class="ambient-glow -bottom-20 -right-20 bg-emerald-500"></div>
 
     <!-- Hidden YouTube Player Container (Used to stream actual songs cleanly) -->
-    <div id="yt-player-container" class="fixed -left-[9999px] top-0 w-[340px] h-[200px] opacity-0 pointer-events-none">
+    <div id="yt-player-container" class="absolute w-[1px] h-[1px] opacity-0 pointer-events-none overflow-hidden">
         <div id="yt-player"></div>
     </div>
 
@@ -143,7 +132,7 @@
             <div>
                 <span class="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold font-mono-code" id="companion-label">Library Companion</span>
                 <h1 class="text-lg md:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-                    Focus Hub <span class="text-indigo-500 text-sm" id="version-label">v1.01</span>
+                    Focus Hub <span class="text-indigo-500 text-sm" id="version-label">v2.5</span>
                 </h1>
             </div>
         </div>
@@ -169,25 +158,6 @@
         <!-- COLUMN LEFT: Timer & Audio Tools (5 cols) -->
         <div class="lg:col-span-5 flex flex-col gap-6" id="left-column">
             
-            <!-- COUNTDOWN OVERLAY (Attractive 3-2-1 before focus starts) -->
-            <div id="countdown-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-slate-950 via-indigo-950/90 to-slate-950 backdrop-blur-2xl" style="display:none;">
-                <canvas id="countdown-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
-                <div class="text-center relative z-10">
-                    <svg class="w-72 h-72 mx-auto -rotate-90 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" id="countdown-ring-svg">
-                        <circle id="countdown-ring-bg" class="text-slate-800/60" stroke-width="4" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"/>
-                        <circle id="countdown-ring-fg" class="text-indigo-500 drop-shadow-[0_0_30px_rgba(99,102,241,0.8)]" stroke-width="6" stroke-linecap="round" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"
-                            style="stroke-dasharray: 816.8; stroke-dashoffset: 0; transition: stroke-dashoffset 0.7s ease-out;"/>
-                    </svg>
-                    <div id="countdown-number" class="text-[220px] font-extrabold font-mono-code text-transparent bg-clip-text bg-gradient-to-b from-indigo-300 via-indigo-400 to-indigo-600 drop-shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all duration-200 select-none" style="line-height:1;">3</div>
-                    <p id="countdown-label" class="text-lg text-indigo-300/70 font-semibold mt-2 tracking-[0.3em] uppercase">Prepare To Focus</p>
-                    <div class="flex gap-2 justify-center mt-6">
-                        <span class="countdown-dot w-2 h-2 rounded-full bg-indigo-500/50"></span>
-                        <span class="countdown-dot w-2 h-2 rounded-full bg-indigo-500/30"></span>
-                        <span class="countdown-dot w-2 h-2 rounded-full bg-indigo-500/10"></span>
-                    </div>
-                </div>
-            </div>
-
             <!-- STAGE 1: POMODORO CLOCK -->
             <section id="timer-card" class="glass-panel rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-xl transition-all duration-500">
                 <div class="w-full flex justify-between items-center mb-6 z-10">
@@ -238,100 +208,121 @@
                 </div>
             </section>
 
-            <!-- STAGE 2: STATS & NOTES -->
-            <section class="glass-panel rounded-2xl p-4 shadow flex flex-col gap-2" id="stats-card">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center justify-between">
-                    <span><i class="fa-solid fa-chart-simple text-indigo-400 mr-1.5"></i> Focus Stats</span>
-                    <span id="streak-count" class="text-[10px] text-amber-400 font-bold">🔥 0 day streak</span>
-                </h3>
-                <div class="grid grid-cols-3 gap-2 text-center">
-                    <div class="bg-slate-900/40 rounded-xl p-2"><div class="text-lg font-bold text-indigo-400 font-mono-code" id="stat-today">0</div><div class="text-[8px] text-slate-500 uppercase tracking-wider">Today</div></div>
-                    <div class="bg-slate-900/40 rounded-xl p-2"><div class="text-lg font-bold text-emerald-400 font-mono-code" id="stat-week">0</div><div class="text-[8px] text-slate-500 uppercase tracking-wider">Week</div></div>
-                    <div class="bg-slate-900/40 rounded-xl p-2"><div class="text-lg font-bold text-amber-400 font-mono-code" id="stat-total">0</div><div class="text-[8px] text-slate-500 uppercase tracking-wider">Total</div></div>
+            <!-- STAGE 2: RETRO MIXTAPE DECK (With User Playlist Selector & Jazz Tracks) -->
+            <section id="audio-card" class="glass-panel rounded-3xl p-6 shadow-xl transition-all duration-500 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center gap-2">
+                        <i class="fa-solid fa-compact-disc text-indigo-400" id="audio-icon-color"></i> Study Mixtape Deck
+                    </h2>
+                    <span class="text-[9px] font-mono-code bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 px-2 py-0.5 rounded-full uppercase">USER CHOOSE PLAYLIST</span>
                 </div>
-                <div class="h-8 bg-slate-900/30 rounded-xl overflow-hidden flex" id="week-chart"></div>
-            </section>
-            <section class="glass-panel rounded-2xl p-4 shadow flex flex-col gap-2" id="notes-card">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code flex items-center justify-between">
-                    <span><i class="fa-solid fa-bookmark text-indigo-400 mr-1.5"></i> Saved Q&A</span>
-                    <span id="notes-count" class="text-[10px] text-slate-500">0</span>
-                </h3>
-                <div id="notes-container" class="space-y-1.5 max-h-24 overflow-y-auto pr-1">
-                    <div class="text-[10px] text-slate-500 text-center py-3">Click ★ on AI replies to save them.</div>
-                </div>
-            </section>
 
-            <!-- STAGE 3: MUSIC DECK -->
-            <section id="audio-card" class="glass-panel rounded-3xl p-5 shadow-xl transition-all duration-500 flex flex-col gap-3">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono-code"><i class="fa-solid fa-compact-disc text-indigo-400 mr-1.5"></i>Mixtape Deck</h2>
-                    <span class="text-[10px] text-slate-500 font-mono-code" id="audio-time-label">0:00</span>
-                </div>
-                <div class="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-3 shadow-inner">
-                    <div class="flex justify-between items-center mb-2">
+                <!-- Custom Cassette Deck Illustration -->
+                <div class="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col items-center justify-between relative overflow-hidden shadow-inner" id="cassette-deck">
+                    <div class="w-full flex justify-between items-center px-1 mb-2">
                         <span class="text-[9px] font-mono-code text-slate-500 font-bold">SIDE A</span>
-                        <span class="text-[9px] font-mono-code text-indigo-400 font-bold">NR [C]</span>
-                    </div>
-                    <div class="flex items-center gap-3 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-                        <div class="w-10 h-10 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative shrink-0" id="left-reel">
-                            <div class="w-3 h-3 bg-slate-700 rounded-full z-10"></div>
-                            <div class="absolute inset-0 flex items-center justify-center"><div class="w-full h-px bg-slate-500/60 rotate-45 absolute"></div><div class="w-full h-px bg-slate-500/60 -rotate-45 absolute"></div></div>
+                        <div class="h-1 flex-1 mx-3 bg-indigo-500/30 rounded">
+                            <div class="h-full bg-indigo-500 rounded transition-all duration-300" id="cassette-progress-bar" style="width: 0%;"></div>
                         </div>
-                        <div class="h-10 flex-1 bg-slate-950/80 border-x border-slate-800 flex items-center justify-center gap-1 rounded-sm px-2">
-                            <span class="w-1.5 h-5 rounded-full bg-amber-500/20" id="track-pulse"></span>
-                            <span class="text-[8px] font-mono-code text-slate-600 tracking-widest">TAPE</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative shrink-0" id="right-reel">
-                            <div class="w-3 h-3 bg-slate-700 rounded-full z-10"></div>
-                            <div class="absolute inset-0 flex items-center justify-center"><div class="w-full h-px bg-slate-500/60 rotate-45 absolute"></div><div class="w-full h-px bg-slate-500/60 -rotate-45 absolute"></div></div>
-                        </div>
+                        <span class="text-[9px] font-mono-code text-slate-500" id="audio-time-label">0:00</span>
                     </div>
-                    <div class="flex justify-between items-center mt-1.5">
-                        <span class="text-[8px] font-mono-code text-slate-500">LOFI & JAZZ MIX</span>
-                        <span class="text-[8px] font-mono-code text-indigo-400 font-bold flex items-center gap-1">
-                            <span class="w-1 h-1 bg-indigo-500 rounded-full inline-block" id="track-pulse-dot"></span> NOW PLAYING
-                        </span>
-                    </div>
-                </div>
-                <div class="bg-slate-900/30 border border-slate-800/60 rounded-xl p-2.5 flex items-center gap-2.5">
-                    <div class="w-6 h-6 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center"><i class="fa-solid fa-play text-[8px] text-indigo-400"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-xs font-semibold text-slate-200 truncate" id="current-track-title">Loading tracks...</div>
-                        <div class="text-[10px] text-slate-400 flex items-center gap-2"><span id="track-artist">Lofi & Jazz</span><span class="text-amber-500" id="audio-tempo-tag">Cozy Vibe</span></div>
-                    </div>
-                    <span class="text-[9px] text-slate-500 font-mono-code" id="cassette-progress-text">0%</span>
-                </div>
-                <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div class="h-full bg-indigo-500 rounded-full transition-all duration-300" id="cassette-progress-bar" style="width:0%"></div></div>
-                <div class="flex flex-col gap-1 bg-slate-950/40 rounded-2xl border border-slate-800 p-2 max-h-[130px] overflow-y-auto scroll-smooth" id="tracklist-picker"></div>
-                <form id="custom-track-form" class="flex gap-1.5">
-                    <input type="text" id="custom-track-input" placeholder="YouTube link or Video ID" class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-3 rounded-xl font-semibold transition">Load</button>
-                </form>
-                <div class="grid grid-cols-5 gap-1.5">
-                    <button id="audio-prev" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex items-center justify-center"><i class="fa-solid fa-backward-step text-xs"></i></button>
-                    <button id="audio-play-pause" class="col-span-3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/10"><i class="fa-solid fa-play text-xs" id="cassette-play-icon"></i><span id="cassette-play-text">Play Tape</span></button>
-                    <button id="audio-next" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex items-center justify-center"><i class="fa-solid fa-forward-step text-xs"></i></button>
-                </div>
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-volume-high text-slate-500 text-[10px]"></i>
-                    <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="0.5" class="flex-1 text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
-                </div>
-            </section>
 
-            <!-- STAGE 3: AMBIENT MIXER -->
-            <section id="ambient-card" class="glass-panel rounded-3xl p-4 shadow-xl transition-all duration-500 flex items-center gap-3">
-                <i class="fa-solid fa-cloud-rain text-indigo-400 text-sm"></i>
-                <div class="flex gap-1.5 flex-1">
-                    <button data-ambient="rain" class="ambient-btn px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 hover:bg-indigo-600/20 text-[10px] font-semibold">☔ Rain</button>
-                    <button data-ambient="fire" class="ambient-btn px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 hover:bg-amber-600/20 text-[10px] font-semibold">🔥 Fire</button>
-                    <button data-ambient="cafe" class="ambient-btn px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 hover:bg-emerald-600/20 text-[10px] font-semibold">☕ Cafe</button>
+                    <!-- Cassette body visual representation -->
+                    <div class="w-full bg-slate-800 border-2 border-slate-600 rounded-lg p-3 flex flex-col justify-between relative shadow-md" style="height: 105px;">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-mono-code text-slate-400 tracking-tight select-none">LOFI & JAZZ MIXTAPE</span>
+                            <span class="text-[9px] font-mono-code text-indigo-400 font-bold">NR [C]</span>
+                        </div>
+
+                        <!-- Center Window with Reels -->
+                        <div class="w-4/5 mx-auto h-10 bg-slate-900 border border-slate-700 rounded flex justify-around items-center px-4 relative overflow-hidden">
+                            <!-- Left Reel -->
+                            <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative" id="left-reel">
+                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
+                                <div class="absolute w-full h-[1px] bg-slate-500"></div>
+                                <div class="absolute w-[1px] h-full bg-slate-500"></div>
+                            </div>
+                            <!-- Small transparent tape window display -->
+                            <div class="h-full w-8 bg-slate-950/80 border-x border-slate-800 flex items-center justify-center">
+                                <div class="w-1.5 h-6 bg-amber-500/20 rounded-full" id="tape-shadow"></div>
+                            </div>
+                            <!-- Right Reel -->
+                            <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center relative" id="right-reel">
+                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
+                                <div class="absolute w-full h-[1px] bg-slate-500"></div>
+                                <div class="absolute w-[1px] h-full bg-slate-500"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-1 text-[8px] font-mono-code text-slate-500">
+                            <span>A: HI-FI ANALOG</span>
+                            <span>TAP TO SELECT TRACK</span>
+                        </div>
+                    </div>
                 </div>
-                <span id="ambient-active-label" class="text-[9px] text-slate-500 font-mono-code">Off</span>
-                <input id="ambient-volume" type="range" min="0" max="1" step="0.05" value="0.3" class="w-14 text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+
+                <!-- Current Track Display Card -->
+                <div class="p-3.5 bg-slate-900/50 border border-slate-800/80 rounded-2xl flex flex-col gap-1.5 shadow-inner">
+                    <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-bold font-mono-code flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full inline-block" id="track-pulse"></span> Now Playing
+                    </div>
+                    <div class="text-xs font-semibold text-slate-200 truncate" id="current-track-title">
+                        Loading study tracks...
+                    </div>
+                    <div class="text-[10px] text-slate-400 flex justify-between items-center">
+                        <span id="track-artist">Lofi & Jazz Studio</span>
+                        <span class="font-mono-code text-amber-500" id="audio-tempo-tag">Cozy Vibe</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Track Selection Menu -->
+                <div class="flex flex-col gap-1 bg-slate-950/40 rounded-2xl border border-slate-800 p-2 max-h-[180px] overflow-y-auto" id="tracklist-picker">
+                    <!-- Dynamic List of Tracks will be rendered here by JS -->
+                </div>
+
+                <!-- Load Custom YouTube Link / ID Drawer -->
+                <div class="p-2.5 bg-slate-900/40 border border-slate-800 rounded-2xl">
+                    <span class="text-[10px] font-mono-code text-slate-400 flex items-center gap-1.5 mb-1.5">
+                        <i class="fa-solid fa-plus text-indigo-400"></i> Load Custom YouTube Track
+                    </span>
+                    <form id="custom-track-form" class="flex gap-1.5">
+                        <input type="text" id="custom-track-input" placeholder="Paste YouTube link or Video ID" class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono-code">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-3 rounded-xl transition font-semibold tracking-wide">Load</button>
+                    </form>
+                </div>
+
+                <!-- Playback Controllers -->
+                <div class="grid grid-cols-5 gap-1.5">
+                    <button id="audio-prev" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex justify-center items-center">
+                        <i class="fa-solid fa-backward-step text-xs"></i>
+                    </button>
+                    <button id="audio-play-pause" class="col-span-3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wider uppercase transition active:scale-95 flex justify-center items-center gap-2 shadow-lg shadow-indigo-600/10">
+                        <i class="fa-solid fa-play text-xs" id="cassette-play-icon"></i> <span id="cassette-play-text">Play Tape</span>
+                    </button>
+                    <button id="audio-next" class="py-2.5 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition active:scale-95 flex justify-center items-center">
+                        <i class="fa-solid fa-forward-step text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Volume and Crackle slider controls -->
+                <div class="grid grid-cols-2 gap-3 mt-1.5">
+                    <div class="flex flex-col gap-1 p-2 bg-slate-900/30 border border-slate-800/60 rounded-xl">
+                        <span class="text-[9px] font-mono-code text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-volume-high text-indigo-400"></i> Tape Volume
+                        </span>
+                        <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="0.5" class="w-full text-indigo-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+                    </div>
+                    <div class="flex flex-col gap-1 p-2 bg-slate-900/30 border border-slate-800/60 rounded-xl">
+                        <span class="text-[9px] font-mono-code text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-nodes text-amber-500"></i> Analog Crackle
+                        </span>
+                        <input id="audio-crackle" type="range" min="0" max="1" step="0.05" value="0.4" class="w-full text-amber-500 h-1 bg-slate-700 rounded-lg cursor-pointer">
+                    </div>
+                </div>
             </section>
         </div>
 
-        <!-- COLUMN RIGHT: Gemini Assistant -->
+        <!-- COLUMN RIGHT: Gemini Intelligent Study Assistant (7 cols) -->
         <div class="lg:col-span-7 flex flex-col h-[600px] lg:h-auto min-h-[500px] glass-panel rounded-3xl overflow-hidden shadow-2xl relative transition-all duration-500" id="assistant-column">
             
             <!-- Candlelight Mode Flicker Screen Layer -->
@@ -355,11 +346,6 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <!-- Download Chat Button -->
-                    <button id="download-chat-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition" title="Download Chat">
-                        <i class="fa-solid fa-download"></i>
-                    </button>
-
                     <!-- Developer API Key Settings Trigger Button -->
                     <button id="api-settings-btn" class="p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition" title="Set Gemini API Key">
                         <i class="fa-solid fa-gear"></i>
@@ -464,7 +450,7 @@
 
     <!-- Drawer / Study Note Panel (Bottom Bar) -->
     <footer class="max-w-7xl w-full mx-auto p-4 md:px-8 shrink-0 relative z-10">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Goals Section -->
             <section class="glass-panel rounded-2xl p-4 flex flex-col justify-between shadow md:col-span-1" id="goals-card">
                 <div>
@@ -587,13 +573,27 @@
 
         function startTimer() {
             if (isTimerActive) return;
-            if (isChatExpandedFocus) {
-                startFocusCountdown(() => {
-                    beginTimerCountdown();
-                });
-            } else {
-                beginTimerCountdown();
-            }
+            isTimerActive = true;
+            playIcon.className = "fa-solid fa-pause text-md ml-0";
+            timerLabel.textContent = "Focusing...";
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    isTimerActive = false;
+                    playIcon.className = "fa-solid fa-play text-md ml-1";
+                    timerLabel.textContent = "Complete!";
+                    playFocusTone(523.25, 1.2, "sine"); // C5 High pitch chime
+                    playFocusTone(659.25, 1.5, "sine"); // E5 High pitch chime
+                    
+                    // Trigger candlelight mode congrats flash
+                    triggerCongratulationFlash();
+                }
+            }, 1000);
         }
 
         function pauseTimer() {
@@ -648,8 +648,10 @@
 
         // --- STREAMING_CHUNK: Integrating user choice and jazz tracks to playlist... ---
         // --- REAL YOUTUBE PLAYER & CASSETTE AUDIO CONTROLLER ---
+        let ytPlayer = null;
+        let isYTApiReady = false;
         let isPlaying = false;
-        let usingDirectEmbed = false;
+        let currentTrackIndex = 0;
         let progressInterval = null;
 
         // The tracks list featuring the exact songs requested, plus three highly requested classic jazz study selections
@@ -754,75 +756,171 @@
             }
         ];
 
-        function embedTrack() {
-            const container = document.getElementById('yt-player');
-            const videoId = tracks[currentTrackIndex].id;
-            container.innerHTML = '';
-            const iframe = document.createElement('iframe');
-            iframe.width = '100%';
-            iframe.height = '100%';
-            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&showinfo=0&loop=0`;
-            iframe.allow = 'autoplay';
-            iframe.style.border = 'none';
-            container.appendChild(iframe);
+        // This built-in YouTube callback registers automatically when the script loads
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '100',
+                width: '100',
+                videoId: tracks[0].id,
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'fs': 0,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'showinfo': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
         }
 
-        function stopEmbed() {
-            const container = document.getElementById('yt-player');
-            container.innerHTML = '';
+        function onPlayerReady(event) {
+            isYTApiReady = true;
+            const volumeVal = parseFloat(document.getElementById('audio-volume').value);
+            ytPlayer.setVolume(volumeVal * 100);
+            renderTracklistPicker();
+            updateCassetteUI();
+        }
+
+        function onPlayerError(event) {
+            console.warn("YouTube player error:", event.data);
+            if (event.data === 100 || event.data === 101 || event.data === 150) {
+                useFallbackAudio();
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                stopFallbackAudio();
+                startVisualTapeTrack();
+            } else if (event.data === YT.PlayerState.CUED) {
+            } else {
+                isPlaying = false;
+                stopVisualTapeTrack();
+            }
+            updateCassetteUI();
+        }
+
+        // --- FALLBACK AUDIO ENGINE (When YouTube fails - generates lo-fi tones) ---
+        let fallbackCtx = null;
+        let fallbackOscillators = [];
+        let fallbackGain = null;
+        let fallbackIsPlaying = false;
+        let fallbackInterval = null;
+
+        function useFallbackAudio() {
+            if (fallbackIsPlaying) return;
+            try {
+                if (!fallbackCtx) {
+                    fallbackCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    fallbackGain = fallbackCtx.createGain();
+                    fallbackGain.gain.setValueAtTime(0.08, fallbackCtx.currentTime);
+                    fallbackGain.connect(fallbackCtx.destination);
+                }
+                if (fallbackCtx.state === 'suspended') fallbackCtx.resume();
+
+                fallbackIsPlaying = true;
+                isPlaying = true;
+                updateCassetteUI();
+                startVisualTapeTrack();
+
+                const lofiNotes = [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66];
+                let noteIndex = 0;
+
+                function playNextNote() {
+                    if (!fallbackIsPlaying || !fallbackCtx) return;
+                    const osc = fallbackCtx.createOscillator();
+                    const noteGain = fallbackCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], fallbackCtx.currentTime);
+                    const now = fallbackCtx.currentTime;
+                    noteGain.gain.setValueAtTime(0.3, now);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(noteGain);
+                    noteGain.connect(fallbackGain);
+                    osc.start(now);
+                    osc.stop(now + 1.2);
+                    fallbackOscillators.push(osc);
+                    noteIndex++;
+                }
+
+                const tempo = Math.max(400, 600 - (currentTrackIndex * 30));
+                playNextNote();
+                fallbackInterval = setInterval(playNextNote, tempo);
+                document.getElementById('current-track-title').textContent = tracks[currentTrackIndex]?.title + " (Fallback Audio)";
+            } catch (e) {
+                console.warn("Fallback audio failed:", e);
+            }
+        }
+
+        function stopFallbackAudio() {
+            fallbackIsPlaying = false;
+            if (fallbackInterval) {
+                clearInterval(fallbackInterval);
+                fallbackInterval = null;
+            }
+            fallbackOscillators.forEach(osc => {
+                try { osc.stop(); } catch(e) {}
+            });
+            fallbackOscillators = [];
         }
 
         // --- RETRO TAPE ANALOG NOISE GENERATOR (Runs parallel to the real YouTube music) ---
-        let sharedAudioCtx = null;
-        let audioCtxInitialized = false;
+        let crackleCtx = null;
         let crackleNode = null;
         let crackleGain = null;
 
         function playAnalogCrackle() {
             try {
-                if (!sharedAudioCtx || !audioCtxInitialized) {
-                    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    audioCtxInitialized = true;
-                }
-                if (!crackleNode) {
-                    crackleGain = sharedAudioCtx.createGain();
-
-                    const bufferSize = sharedAudioCtx.sampleRate * 2;
-                    const buffer = sharedAudioCtx.createBuffer(1, bufferSize, sharedAudioCtx.sampleRate);
+                if (!crackleCtx) {
+                    crackleCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    crackleGain = crackleCtx.createGain();
+                    
+                    const bufferSize = crackleCtx.sampleRate * 2;
+                    const buffer = crackleCtx.createBuffer(1, bufferSize, crackleCtx.sampleRate);
                     const data = buffer.getChannelData(0);
-
+                    
                     for (let i = 0; i < bufferSize; i++) {
                         const whiteNoise = Math.random() * 2 - 1;
                         const cracklePop = Math.random() > 0.9997 ? (Math.random() > 0.5 ? 0.35 : -0.35) : 0;
                         data[i] = whiteNoise * 0.035 + cracklePop;
                     }
 
-                    const source = sharedAudioCtx.createBufferSource();
+                    const source = crackleCtx.createBufferSource();
                     source.buffer = buffer;
                     source.loop = true;
 
-                    const biquadFilter = sharedAudioCtx.createBiquadFilter();
+                    const biquadFilter = crackleCtx.createBiquadFilter();
                     biquadFilter.type = "bandpass";
-                    biquadFilter.frequency.setValueAtTime(1200, sharedAudioCtx.currentTime);
-                    biquadFilter.Q.setValueAtTime(1.0, sharedAudioCtx.currentTime);
+                    biquadFilter.frequency.setValueAtTime(1200, crackleCtx.currentTime);
+                    biquadFilter.Q.setValueAtTime(1.0, crackleCtx.currentTime);
 
                     source.connect(biquadFilter);
                     biquadFilter.connect(crackleGain);
-                    crackleGain.connect(sharedAudioCtx.destination);
+                    crackleGain.connect(crackleCtx.destination);
                     source.start();
-                    crackleNode = source;
                 }
 
-                if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
-                crackleGain.gain.setValueAtTime(0.2 * 0.45, sharedAudioCtx.currentTime);
+                if (crackleCtx.state === 'suspended') {
+                    crackleCtx.resume();
+                }
+
+                const crackleSliderVal = parseFloat(document.getElementById('audio-crackle').value);
+                crackleGain.gain.setValueAtTime(crackleSliderVal * 0.45, crackleCtx.currentTime);
             } catch (e) {
                 console.warn("Unable to start cassette tape deck crackle node:", e);
             }
         }
 
         function stopAnalogCrackle() {
-            if (crackleGain && sharedAudioCtx) {
-                crackleGain.gain.setValueAtTime(0, sharedAudioCtx.currentTime || 0);
+            if (crackleGain) {
+                crackleGain.gain.setValueAtTime(0, crackleCtx?.currentTime || 0);
             }
         }
 
@@ -831,7 +929,7 @@
         const prevTapeBtn = document.getElementById('audio-prev');
         const nextTapeBtn = document.getElementById('audio-next');
         const volumeSlider = document.getElementById('audio-volume');
-        const crackleSlider = null;
+        const crackleSlider = document.getElementById('audio-crackle');
         const trackTitle = document.getElementById('current-track-title');
         const trackArtist = document.getElementById('track-artist');
         const tempoTag = document.getElementById('audio-tempo-tag');
@@ -905,6 +1003,21 @@
             rightReel.classList.add('spin-reel');
             document.getElementById('track-pulse').classList.add('animate-ping');
             playAnalogCrackle();
+
+            if (progressInterval) clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (isYTApiReady && ytPlayer && isPlaying) {
+                    const currentSecs = Math.floor(ytPlayer.getCurrentTime());
+                    const duration = Math.max(ytPlayer.getDuration(), 1);
+                    
+                    const mins = Math.floor(currentSecs / 60);
+                    const secs = currentSecs % 60;
+                    document.getElementById('audio-time-label').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    
+                    const progressPercent = (currentSecs / duration) * 100;
+                    document.getElementById('cassette-progress-bar').style.width = `${progressPercent}%`;
+                }
+            }, 500);
         }
 
         function stopVisualTapeTrack() {
@@ -918,7 +1031,6 @@
         function updateCassetteUI() {
             if (tracks.length === 0) return;
             const track = tracks[currentTrackIndex];
-            if (!track) return;
             trackTitle.textContent = track.title;
             trackArtist.textContent = track.artist;
             tempoTag.textContent = track.tempo;
@@ -934,47 +1046,53 @@
         }
 
         function loadAndPlayTrack() {
-            embedTrack();
-            isPlaying = true;
-            updateCassetteUI();
-            startVisualTapeTrack();
-            usingDirectEmbed = true;
+            if (isYTApiReady && ytPlayer) {
+                ytPlayer.loadVideoById(tracks[currentTrackIndex].id);
+                isPlaying = true;
+                updateCassetteUI();
+                startVisualTapeTrack();
+            }
         }
 
         playPauseTapeBtn.addEventListener('click', () => {
-            if (isPlaying) {
-                stopEmbed();
-                isPlaying = false;
-                usingDirectEmbed = false;
-                stopVisualTapeTrack();
-                updateCassetteUI();
-            } else {
-                loadAndPlayTrack();
+            if (!isYTApiReady) {
+                alert("YouTube system API is initializing... Please press play again in 2 seconds.");
+                return;
             }
+            if (isPlaying) {
+                ytPlayer.pauseVideo();
+                isPlaying = false;
+                stopVisualTapeTrack();
+            } else {
+                ytPlayer.playVideo();
+                isPlaying = true;
+                startVisualTapeTrack();
+            }
+            updateCassetteUI();
         });
 
         nextTapeBtn.addEventListener('click', () => {
             currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-            if (usingDirectEmbed) {
-                loadAndPlayTrack();
-            } else {
-                updateCassetteUI();
-                renderTracklistPicker();
-            }
+            loadAndPlayTrack();
         });
 
         prevTapeBtn.addEventListener('click', () => {
             currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
-            if (usingDirectEmbed) {
-                loadAndPlayTrack();
-            } else {
-                updateCassetteUI();
-                renderTracklistPicker();
-            }
+            loadAndPlayTrack();
         });
 
         volumeSlider.addEventListener('input', (e) => {
             const vol = parseFloat(e.target.value);
+            if (isYTApiReady && ytPlayer) {
+                ytPlayer.setVolume(vol * 100);
+            }
+        });
+
+        crackleSlider.addEventListener('input', (e) => {
+            const crackleVal = parseFloat(e.target.value);
+            if (crackleGain && crackleCtx) {
+                crackleGain.gain.setValueAtTime(crackleVal * 0.45, crackleCtx.currentTime);
+            }
         });
 
 
@@ -1136,7 +1254,6 @@
         const chatForm = document.getElementById('chat-submit-form');
         const chatInput = document.getElementById('chat-input-text');
         const chatMessages = document.getElementById('chat-messages-container');
-        const chatAnchor = document.getElementById('chat-anchor-bottom');
         const suggestionsGrid = document.getElementById('suggestions-grid');
         const searchCheckbox = document.getElementById('search-grounding-checkbox');
         const focusModeBtn = document.getElementById('focus-mode-btn');
@@ -1161,7 +1278,7 @@
         })();
         if (customGeminiKey) {
             customApiKeyInput.value = customGeminiKey;
-            modelNameIndicator.textContent = "GEMINI-2.0-FLASH (LIVE)";
+            modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
         } else {
             modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
         }
@@ -1172,242 +1289,49 @@
             customGeminiKey = keyVal;
             apiKeyPanel.classList.add('hidden');
             if (keyVal) {
-                modelNameIndicator.textContent = "GEMINI-2.0-FLASH (LIVE)";
+                modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
             } else {
                 modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
             }
         });
 
-        let wakeLockSentinel = null;
-        let dndInterval = null;
-
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLockSentinel = await navigator.wakeLock.request('screen');
-                    wakeLockSentinel.addEventListener('release', () => {});
-                }
-            } catch (e) {
-                console.warn("WakeLock not supported");
-            }
-        }
-
-        function releaseWakeLock() {
-            if (wakeLockSentinel) {
-                wakeLockSentinel.release();
-                wakeLockSentinel = null;
-            }
-        }
-
-        function blockNotifications() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
-            }
-            dndInterval = setInterval(() => {
-                document.title = "🔇 DO NOT DISTURB — FOCUS MODE ACTIVE";
-            }, 2000);
-        }
-
-        function unblockNotifications() {
-            if (dndInterval) {
-                clearInterval(dndInterval);
-                dndInterval = null;
-            }
-            document.title = "Focus & AI Library Hub";
-        }
-
-        focusModeBtn.addEventListener('click', async () => {
+        focusModeBtn.addEventListener('click', () => {
             isChatExpandedFocus = !isChatExpandedFocus;
             if (isChatExpandedFocus) {
                 leftColumn.style.display = 'none';
-                document.getElementById('assistant-column').classList.remove('lg:col-span-7');
-                document.getElementById('assistant-column').classList.add('lg:col-span-12');
                 focusModeText.textContent = "Exit Focus";
                 focusModeBtn.innerHTML = `<i class="fa-solid fa-compress text-[10px]"></i> <span id="focus-mode-text">Exit Focus</span>`;
-                focusModeBtn.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-300');
-                focusModeBtn.classList.remove('bg-slate-700/50', 'border-slate-600/50', 'text-slate-300');
-
-                const dndBadge = document.createElement('div');
-                dndBadge.id = 'dnd-badge';
-                dndBadge.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[60] bg-rose-600/90 backdrop-blur-md border border-rose-500/50 text-white px-5 py-2 rounded-full text-xs font-bold font-mono-code tracking-wider shadow-2xl flex items-center gap-2 animate-bounce';
-                dndBadge.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-200 animate-pulse"></i> FOCUS MODE — DO NOT DISTURB <i class="fa-solid fa-circle-exclamation text-rose-200 animate-pulse"></i>';
-                document.body.appendChild(dndBadge);
-
-                await requestWakeLock();
-                blockNotifications();
-                try { await document.documentElement.requestFullscreen(); } catch(e) {}
             } else {
                 leftColumn.style.display = 'flex';
-                document.getElementById('assistant-column').classList.remove('lg:col-span-12');
-                document.getElementById('assistant-column').classList.add('lg:col-span-7');
                 focusModeText.textContent = "Expand Focus";
                 focusModeBtn.innerHTML = `<i class="fa-solid fa-expand text-[10px]"></i> <span id="focus-mode-text">Expand Focus</span>`;
-                focusModeBtn.classList.remove('bg-rose-600/20', 'border-rose-500/30', 'text-rose-300');
-                focusModeBtn.classList.add('bg-slate-700/50', 'border-slate-600/50', 'text-slate-300');
-
-                const badge = document.getElementById('dnd-badge');
-                if (badge) badge.remove();
-                releaseWakeLock();
-                unblockNotifications();
-                if (document.fullscreenElement) {
-                    try { await document.exitFullscreen(); } catch(e) {}
-                }
             }
         });
 
-        function startFocusCountdown(callback) {
-            const overlay = document.getElementById('countdown-overlay');
-            const numDisplay = document.getElementById('countdown-number');
-            const label = document.getElementById('countdown-label');
-            const ringFg = document.getElementById('countdown-ring-fg');
-            const dots = document.querySelectorAll('.countdown-dot');
-            const canvas = document.getElementById('countdown-canvas');
-            const ctx = canvas.getContext('2d');
-            let count = 3;
-            let particles = [];
-            const ringCircum = 816.8;
-
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            overlay.classList.remove('hidden');
-            overlay.style.display = 'flex';
-            numDisplay.textContent = count;
-            numDisplay.style.transform = 'scale(1)';
-            label.textContent = "Prepare To Focus";
-            ringFg.style.strokeDashoffset = '0';
-            ringFg.style.stroke = '#818cf8';
-
-            function createParticles(x, y, color) {
-                for (let i = 0; i < 30; i++) {
-                    const angle = (Math.PI * 2 / 30) * i;
-                    const speed = 4 + Math.random() * 6;
-                    particles.push({
-                        x, y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        life: 1,
-                        size: 3 + Math.random() * 5,
-                        color
-                    });
-                }
+        function appendMessageBubble(sender, text) {
+            const row = document.createElement('div');
+            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300`;
+            
+            if (sender === 'user') {
+                row.innerHTML = `
+                    <div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed">
+                        ${escapeHTML(text)}
+                    </div>
+                `;
+            } else {
+                const formattedText = parseMarkdownSimple(text);
+                row.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-robot text-xs text-indigo-400"></i>
+                    </div>
+                    <div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg">
+                        ${formattedText}
+                    </div>
+                `;
             }
 
-            function animateParticles() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles = particles.filter(p => p.life > 0);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += 0.1;
-                    p.life -= 0.02;
-                    p.size *= 0.98;
-                    ctx.globalAlpha = p.life;
-                    ctx.fillStyle = p.color;
-                    ctx.shadowColor = p.color;
-                    ctx.shadowBlur = 15;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-                ctx.globalAlpha = 1;
-                ctx.shadowBlur = 0;
-                if (particles.length > 0) requestAnimationFrame(animateParticles);
-            }
-
-            const colors = ['#818cf8', '#a78bfa', '#6ee7b7', '#34d399'];
-            const ringColors = ['#818cf8', '#a78bfa', '#6ee7b7', '#34d399'];
-            const labels = ['Prepare To Focus', 'Get Ready...', 'Almost There!', 'Lock In!'];
-
-            const countInterval = setInterval(() => {
-                const step = 3 - count;
-                const progress = (step + 1) / 3;
-                ringFg.style.strokeDashoffset = String(ringCircum - (ringCircum * progress));
-
-                setTimeout(() => {
-                    numDisplay.style.transform = 'scale(1.6)';
-                    numDisplay.style.opacity = '0';
-                }, 100);
-                setTimeout(() => {
-                    count--;
-                    if (count > 0) {
-                        const colorIdx = 3 - count;
-                        numDisplay.textContent = count;
-                        numDisplay.style.background = `linear-gradient(to bottom, ${colors[colorIdx]}88, ${colors[colorIdx]})`;
-                        numDisplay.style.webkitBackgroundClip = 'text';
-                        numDisplay.style.backgroundClip = 'text';
-                        numDisplay.style.transform = 'scale(0.3)';
-                        numDisplay.style.opacity = '1';
-                        ringFg.style.stroke = ringColors[colorIdx];
-                        label.textContent = labels[colorIdx] || "Focus...";
-
-                        createParticles(canvas.width / 2, canvas.height / 2, colors[colorIdx]);
-                        animateParticles();
-                        playFocusTone(400 + (count * 120), 0.25, 'sine');
-
-                        dots.forEach((d, i) => {
-                            d.style.background = i < (3 - count) ? colors[colorIdx] : 'rgba(99,102,241,0.2)';
-                            d.style.transform = i < (3 - count) ? 'scale(1.5)' : 'scale(1)';
-                            d.style.transition = 'all 0.3s ease';
-                        });
-
-                        setTimeout(() => {
-                            numDisplay.style.transform = 'scale(1)';
-                        }, 150);
-                    } else if (count === 0) {
-                        numDisplay.textContent = 'GO!';
-                        numDisplay.style.background = 'linear-gradient(to bottom, #6ee7b7, #34d399)';
-                        numDisplay.style.webkitBackgroundClip = 'text';
-                        numDisplay.style.backgroundClip = 'text';
-                        numDisplay.style.transform = 'scale(1.8)';
-                        numDisplay.style.opacity = '1';
-                        ringFg.style.stroke = '#34d399';
-                        ringFg.style.strokeDashoffset = '0';
-                        label.textContent = 'Lock In!';
-                        overlay.style.transition = 'all 0.5s ease';
-                        overlay.style.backgroundColor = 'rgba(52,211,153,0.15)';
-
-                        createParticles(canvas.width / 2, canvas.height / 2, '#34d399');
-                        createParticles(canvas.width / 2, canvas.height / 2, '#6ee7b7');
-                        animateParticles();
-                        playFocusTone(880, 0.5, 'sine');
-                        setTimeout(() => playFocusTone(1108, 0.4, 'sine'), 200);
-
-                        dots.forEach(d => {
-                            d.style.background = '#34d399';
-                            d.style.transform = 'scale(2)';
-                            d.style.boxShadow = '0 0 15px rgba(52,211,153,0.6)';
-                        });
-
-                        setTimeout(() => {
-                            numDisplay.style.transform = 'scale(0.1)';
-                            numDisplay.style.opacity = '0';
-                        }, 600);
-                    } else {
-                        clearInterval(countInterval);
-                        overlay.style.transition = 'all 0.8s ease';
-                        overlay.style.opacity = '0';
-                        particles = [];
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        setTimeout(() => {
-                            overlay.classList.add('hidden');
-                            overlay.style.display = 'none';
-                            overlay.style.opacity = '1';
-                            overlay.style.backgroundColor = 'transparent';
-                            numDisplay.style.transform = 'scale(1)';
-                            numDisplay.style.opacity = '1';
-                            numDisplay.className = 'text-[220px] font-extrabold font-mono-code text-transparent bg-clip-text bg-gradient-to-b from-indigo-300 via-indigo-400 to-indigo-600 drop-shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all duration-200 select-none';
-                            ringFg.style.stroke = '#818cf8';
-                            dots.forEach(d => {
-                                d.style.background = 'rgba(99,102,241,0.2)';
-                                d.style.transform = 'scale(1)';
-                                d.style.boxShadow = 'none';
-                            });
-                            if (callback) callback();
-                        }, 800);
-                    }
-                }, 350);
-            }, 1200);
+            chatMessages.appendChild(row);
+            document.getElementById('chat-anchor-bottom').scrollIntoView({ behavior: 'smooth' });
         }
 
         function parseMarkdownSimple(str) {
@@ -1431,46 +1355,6 @@
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;");
         }
-
-        let chatHistory = [];
-
-        function createMessageSparkles(el) {
-            for (let i = 0; i < 6; i++) {
-                const spark = document.createElement('span');
-                spark.className = 'absolute w-1.5 h-1.5 rounded-full pointer-events-none';
-                spark.style.background = ['#818cf8','#a78bfa','#6ee7b7','#34d399','#f472b6','#fbbf24'][i];
-                spark.style.left = (10 + Math.random() * 80) + '%';
-                spark.style.top = (10 + Math.random() * 80) + '%';
-                spark.style.animation = `sparkle-fade ${0.6 + Math.random() * 0.8}s ease-out forwards`;
-                el.appendChild(spark);
-                setTimeout(() => spark.remove(), 1500);
-            }
-        }
-
-        function downloadChat() {
-            if (chatHistory.length === 0) {
-                const noChat = document.createElement('div');
-                noChat.className = 'flex justify-start items-start gap-3 mb-4';
-                noChat.innerHTML = '<div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-robot text-xs text-indigo-400"></i></div><div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm shadow-lg">No messages to download yet. Start a conversation!</div>';
-                chatMessages.appendChild(noChat);
-                chatAnchor.scrollIntoView({ behavior: 'smooth' });
-                return;
-            }
-            let chatText = "Focus & AI Library Hub - Chat Export\n";
-            chatText += "====================================\n\n";
-            chatHistory.forEach(msg => {
-                chatText += `[${msg.role.toUpperCase()}] ${msg.text}\n\n`;
-            });
-            chatText += "--- End of Chat ---\n";
-            const blob = new Blob([chatText], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `focus-hub-chat-${new Date().toISOString().slice(0,10)}.txt`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
-
-        document.getElementById('download-chat-btn').addEventListener('click', downloadChat);
 
         function appendTypingIndicator() {
             const row = document.createElement('div');
@@ -1600,9 +1484,7 @@ But don't worry, here are some ways to keep studying:
                 });
                 
                 if (!response.ok) {
-                    const errBody = await response.json().catch(() => ({}));
-                    const errMsg = errBody?.error?.message || `HTTP ${response.status}`;
-                    throw new Error(errMsg);
+                    throw new Error(`API Error: ${response.status}`);
                 }
 
                 const result = await response.json();
@@ -1622,24 +1504,19 @@ But don't worry, here are some ways to keep studying:
             } catch (err) {
                 console.warn("API call fell back to local reasoning module...", err);
                 removeTypingIndicator();
-
-                const errText = err?.message || '';
-                if (errText.includes('quota') || errText.includes('RESOURCE_EXHAUSTED') || errText.includes('429')) {
-                    appendMessageBubble('ai', `⚠️ **Gemini API quota exceeded.** Your free tier ran out of requests for now. Try again in about a minute — the quota resets automatically.
-
-Until then, ask me about topics like *"what is an animal"*, *"explain photosynthesis"*, or *"study tips"* for instant offline answers! 🎧`);
-                } else if (errText.includes('API_KEY_INVALID') || errText.includes('invalid') || errText.includes('403') || errText.includes('not found')) {
-                    appendMessageBubble('ai', `🔑 **Your Gemini API key is not working.** 
-
-1. Click the **Settings Gear** ⚙️ at the top right.
-2. Go to https://aistudio.google.com/apikey and get a free key.
-3. Paste it and save.
-
-Or ask offline questions like *"what is an animal"* for instant answers!`);
-                } else if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
+                
+                if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
                     appendMessageBubble('ai', LOCAL_OFFLINE_BRAIN[normalizedQuery]);
                 } else {
-                    appendMessageBubble('ai', `I couldn't reach the Gemini API right now. Let me help offline instead! Ask me about *"what is an animal"*, *"explain photosynthesis"*, or *"study tips"* for instant answers! 🎧`);
+                    const fallbackText = `I ran into a connection block while trying to reach the network. 
+
+To resolve this on local environments like the one in **Capture.PNG**:
+1. Click the **Settings Gear** ⚙️ at the top right of this chat box.
+2. Paste your Gemini API key in the entry box and save it.
+3. This safely bypasses browser origin restrictions and lets the live assistant work seamlessly!
+
+Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish this study session strong! 👊✨`;
+                    appendMessageBubble('ai', fallbackText);
                 }
             }
         }
@@ -1660,297 +1537,6 @@ Or ask offline questions like *"what is an animal"* for instant answers!`);
                 askGeminiStudyQuestions(queryText);
             });
         });
-
-        // ===== NEW FEATURES =====
-
-        // 1. AMBIENT SOUND MIXER (rain, fireplace, cafe using Web Audio API)
-        let ambientCtx = null;
-        let ambientSource = null;
-        let ambientGain = null;
-        let ambientInterval = null;
-        let currentAmbient = null;
-
-        function generateAmbientNoise(type) {
-            if (!ambientCtx) {
-                ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
-                ambientGain = ambientCtx.createGain();
-                ambientGain.gain.setValueAtTime(parseFloat(document.getElementById('ambient-volume').value) * 0.3, ambientCtx.currentTime);
-                ambientGain.connect(ambientCtx.destination);
-            }
-            if (ambientCtx.state === 'suspended') ambientCtx.resume();
-
-            const sampleRate = ambientCtx.sampleRate;
-            const duration = 4;
-            const bufferSize = sampleRate * duration;
-            const buffer = ambientCtx.createBuffer(1, bufferSize, sampleRate);
-            const data = buffer.getChannelData(0);
-
-            for (let i = 0; i < bufferSize; i++) {
-                const t = i / sampleRate;
-                let val = 0;
-                if (type === 'rain') {
-                    const white = Math.random() * 2 - 1;
-                    const filter = Math.sin(t * 2000) * 0.3 + Math.sin(t * 4000) * 0.2;
-                    const drops = Math.random() > 0.998 ? (Math.random() > 0.5 ? 0.6 : -0.6) : 0;
-                    val = white * 0.15 + filter * 0.1 + drops;
-                } else if (type === 'fire') {
-                    const crackle = Math.random() > 0.995 ? (Math.random() > 0.5 ? 0.5 : -0.5) : 0;
-                    const rumble = Math.sin(t * 80) * 0.2 + Math.sin(t * 160) * 0.1;
-                    val = crackle * 0.3 + rumble * 0.2 + (Math.random() * 2 - 1) * 0.08;
-                } else if (type === 'cafe') {
-                    const murmur = Math.sin(t * 300 + Math.sin(t * 2) * 50) * 0.08;
-                    const chatter = Math.random() > 0.99 ? (Math.random() * 0.4) : 0;
-                    const clink = Math.random() > 0.997 ? 0.3 : 0;
-                    val = murmur + chatter + clink + (Math.random() * 2 - 1) * 0.04;
-                }
-                data[i] = Math.max(-1, Math.min(1, val));
-            }
-
-            if (ambientSource) { try { ambientSource.stop(); } catch(e) {} }
-            ambientSource = ambientCtx.createBufferSource();
-            ambientSource.buffer = buffer;
-            ambientSource.loop = true;
-            ambientSource.connect(ambientGain);
-            ambientSource.start();
-        }
-
-        document.querySelectorAll('.ambient-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const type = btn.dataset.ambient;
-                document.querySelectorAll('.ambient-btn').forEach(b => {
-                    b.classList.remove('bg-indigo-600/20', 'border-indigo-500/30', 'text-indigo-300', 'bg-amber-600/20', 'border-amber-500/30', 'text-amber-300', 'bg-emerald-600/20', 'border-emerald-500/30', 'text-emerald-300');
-                });
-                if (currentAmbient === type) {
-                    currentAmbient = null;
-                    document.getElementById('ambient-active-label').textContent = 'None';
-                    if (ambientSource) { try { ambientSource.stop(); } catch(e) {} }
-                    return;
-                }
-                currentAmbient = type;
-                const colors = { rain: 'indigo', fire: 'amber', cafe: 'emerald' };
-                btn.classList.add(`bg-${colors[type]}-600/20`, `border-${colors[type]}-500/30`, `text-${colors[type]}-300`);
-                document.getElementById('ambient-active-label').textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                generateAmbientNoise(type);
-            });
-        });
-
-        document.getElementById('ambient-volume').addEventListener('input', (e) => {
-            const vol = parseFloat(e.target.value) * 0.3;
-            if (ambientGain) ambientGain.gain.setValueAtTime(vol, ambientCtx?.currentTime || 0);
-        });
-
-        // 2. VOICE INPUT FOR CHAT
-        let recognition = null;
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-
-            const micBtn = document.createElement('button');
-            micBtn.type = 'button';
-            micBtn.id = 'voice-input-btn';
-            micBtn.className = 'bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-2xl px-3.5 flex items-center justify-center transition border border-slate-600/50';
-            micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
-            micBtn.addEventListener('click', () => {
-                if (!recognition) return;
-                micBtn.innerHTML = '<i class="fa-solid fa-microphone text-rose-400 animate-pulse"></i>';
-                micBtn.classList.add('bg-rose-600/20', 'border-rose-500/30');
-                recognition.start();
-            });
-            recognition.onresult = (e) => {
-                const transcript = e.results[0][0].transcript;
-                document.getElementById('chat-input-text').value = transcript;
-                document.getElementById('chat-submit-form').dispatchEvent(new Event('submit'));
-            };
-            recognition.onend = () => {
-                micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
-                micBtn.classList.remove('bg-rose-600/20', 'border-rose-500/30');
-            };
-            document.getElementById('chat-submit-form').appendChild(micBtn);
-        }
-
-        // 3. SAVE Q&A AS NOTES + AUTO-PLAY NEXT TRACK
-        function addSaveButtonToBubble(row, text, sender) {
-            if (sender !== 'ai') return;
-            const bubble = row.querySelector('.ai-bubble') || row.lastElementChild;
-            if (!bubble) return;
-            const saveBtn = document.createElement('button');
-            saveBtn.className = 'absolute top-2 right-2 text-[10px] text-slate-500 hover:text-amber-400 transition opacity-0 group-hover:opacity-100';
-            saveBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
-            saveBtn.title = 'Save to notes';
-            bubble.classList.add('group');
-            bubble.style.position = 'relative';
-            bubble.appendChild(saveBtn);
-            saveBtn.addEventListener('click', () => {
-                const notes = JSON.parse(localStorage.getItem('focus_notes') || '[]');
-                notes.push({ text: text, date: new Date().toISOString().slice(0, 16) });
-                localStorage.setItem('focus_notes', JSON.stringify(notes));
-                saveBtn.innerHTML = '<i class="fa-solid fa-star text-amber-400"></i>';
-                renderSavedNotes();
-            });
-        }
-
-        // 4. FOCUS STATS & STREAK TRACKER
-        function recordFocusSession() {
-            const today = new Date().toISOString().slice(0, 10);
-            const stats = JSON.parse(localStorage.getItem('focus_stats') || '{}');
-            stats[today] = (stats[today] || 0) + 1;
-            localStorage.setItem('focus_stats', JSON.stringify(stats));
-            renderFocusStats();
-        }
-
-        function renderFocusStats() {
-            const stats = JSON.parse(localStorage.getItem('focus_stats') || '{}');
-            const today = new Date().toISOString().slice(0, 10);
-            const todayCount = stats[today] || 0;
-            const weekDays = [];
-            let weekCount = 0;
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                const key = d.toISOString().slice(0, 10);
-                const c = stats[key] || 0;
-                weekDays.push(c);
-                weekCount += c;
-            }
-            const total = Object.values(stats).reduce((a, b) => a + b, 0);
-
-            // Streak calculation
-            let streak = 0;
-            const d = new Date();
-            while (true) {
-                const key = d.toISOString().slice(0, 10);
-                if (stats[key]) { streak++; d.setDate(d.getDate() - 1); }
-                else break;
-            }
-
-            document.getElementById('stat-today').textContent = todayCount;
-            document.getElementById('stat-week').textContent = weekCount;
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('streak-count').textContent = `🔥 ${streak} day streak`;
-
-            // Mini bar chart
-            const chart = document.getElementById('week-chart');
-            const max = Math.max(...weekDays, 1);
-            chart.innerHTML = weekDays.map((c, i) => {
-                const h = (c / max) * 100;
-                const today = i === 6;
-                return `<div class="flex-1 flex items-end justify-center h-full pb-1"><div style="height:${Math.max(h, 2)}%;width:70%;background:${today ? '#818cf8' : '#334155'};border-radius:3px;transition:all 0.5s" title="${c}"></div></div>`;
-            }).join('');
-        }
-
-        function renderSavedNotes() {
-            const notes = JSON.parse(localStorage.getItem('focus_notes') || '[]');
-            const container = document.getElementById('notes-container');
-            const count = document.getElementById('notes-count');
-            count.textContent = `${notes.length} saved`;
-            if (notes.length === 0) {
-                container.innerHTML = '<div class="text-[10px] text-slate-500 text-center py-4">No saved notes yet. Click ★ on AI responses to save them.</div>';
-                return;
-            }
-            container.innerHTML = notes.slice(-10).reverse().map(n =>
-                `<div class="text-[10px] bg-slate-900/30 rounded-lg p-2 border border-slate-800/40 flex justify-between items-start gap-1">
-                    <span class="text-slate-300 truncate flex-1">${n.text.slice(0, 60)}${n.text.length > 60 ? '...' : ''}</span>
-                    <span class="text-slate-600 shrink-0">${n.date.slice(5)}</span>
-                </div>`
-            ).join('');
-        }
-
-        function appendMessageBubble(sender, text) {
-            chatHistory.push({ role: sender, text: text, time: new Date().toISOString() });
-            const row = document.createElement('div');
-            row.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3 transition-all duration-300 mb-4`;
-            if (sender === 'user') {
-                row.innerHTML = `<div class="max-w-[85%] bg-indigo-600/90 border border-indigo-500/50 text-white rounded-2xl rounded-tr-none p-3.5 text-sm shadow-md leading-relaxed user-bubble">${escapeHTML(text)}</div>`;
-            } else {
-                row.innerHTML = `<div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-robot text-xs text-indigo-400"></i></div><div class="max-w-[85%] bg-slate-800/70 border border-slate-700/50 text-slate-100 rounded-2xl rounded-tl-none p-3.5 text-sm leading-relaxed shadow-lg ai-bubble">${parseMarkdownSimple(text)}</div>`;
-            }
-            chatMessages.appendChild(row);
-            chatAnchor.scrollIntoView({ behavior: 'smooth' });
-            createMessageSparkles(row);
-            addSaveButtonToBubble(row, text, sender);
-        }
-
-        // 5. STRETCH REMINDER OVERLAY
-        let stretchInterval = null;
-        function startStretchReminders() {
-            if (stretchInterval) clearInterval(stretchInterval);
-            stretchInterval = setInterval(() => {
-                if (isTimerActive) {
-                    const overlay = document.createElement('div');
-                    overlay.id = 'stretch-overlay';
-                    overlay.className = 'fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm flex items-center justify-center';
-                    overlay.innerHTML = `
-                        <div class="glass-panel rounded-3xl p-8 text-center max-w-sm mx-4 animate-bounce">
-                            <div class="text-5xl mb-4">🧘</div>
-                            <h3 class="text-lg font-bold text-white mb-2">Time to Stretch!</h3>
-                            <p class="text-sm text-slate-300 mb-4">Stand up, stretch your arms, take a deep breath.</p>
-                            <div class="flex gap-3 justify-center">
-                                <div class="w-12 h-12 bg-indigo-600/30 rounded-2xl flex items-center justify-center text-2xl animate-pulse">🙆</div>
-                                <div class="w-12 h-12 bg-indigo-600/30 rounded-2xl flex items-center justify-center text-2xl animate-pulse" style="animation-delay:0.3s">🤸</div>
-                                <div class="w-12 h-12 bg-indigo-600/30 rounded-2xl flex items-center justify-center text-2xl animate-pulse" style="animation-delay:0.6s">🧎</div>
-                            </div>
-                            <button id="dismiss-stretch" class="mt-6 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl text-sm font-semibold transition">I'm Done!</button>
-                        </div>
-                    `;
-                    document.body.appendChild(overlay);
-                    document.getElementById('dismiss-stretch').addEventListener('click', () => overlay.remove());
-                    setTimeout(() => { const e = document.getElementById('stretch-overlay'); if (e) e.remove(); }, 10000);
-                }
-            }, 1800000);
-        }
-        startStretchReminders();
-
-        // 6. THEME SWITCHER
-        const themes = [
-            { name: 'Indigo', bg: '#0b0f19', accent: '#818cf8', primary: 'indigo' },
-            { name: 'Emerald', bg: '#0a1a10', accent: '#34d399', primary: 'emerald' },
-            { name: 'Rose', bg: '#1a0a0f', accent: '#fb7185', primary: 'rose' },
-            { name: 'Amber', bg: '#1a1408', accent: '#fbbf24', primary: 'amber' },
-            { name: 'Sky', bg: '#0a1420', accent: '#38bdf8', primary: 'sky' }
-        ];
-        let currentTheme = 0;
-
-        const themeBtn = document.createElement('button');
-        themeBtn.id = 'theme-switcher-btn';
-        themeBtn.className = 'p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl text-xs transition';
-        themeBtn.title = 'Switch Theme';
-        themeBtn.innerHTML = '<i class="fa-solid fa-palette"></i>';
-        themeBtn.addEventListener('click', () => {
-            currentTheme = (currentTheme + 1) % themes.length;
-            const t = themes[currentTheme];
-            document.body.style.backgroundColor = t.bg;
-            document.getElementById('glow-l').className = `ambient-glow -top-20 -left-20 bg-${t.primary}-500`;
-            document.getElementById('glow-r').className = `ambient-glow -bottom-20 -right-20 bg-${t.primary}-500`;
-        });
-        document.querySelector('#assistant-header .flex.items-center.gap-2').prepend(themeBtn);
-
-        // 7. RECORD FOCUS ON TIMER COMPLETE
-        function beginTimerCountdown() {
-            isTimerActive = true;
-            playIcon.className = "fa-solid fa-pause text-md ml-0";
-            timerLabel.textContent = "Focusing...";
-            timerInterval = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    isTimerActive = false;
-                    playIcon.className = "fa-solid fa-play text-md ml-1";
-                    timerLabel.textContent = "Complete!";
-                    playFocusTone(523.25, 1.2, "sine");
-                    playFocusTone(659.25, 1.5, "sine");
-                    recordFocusSession();
-                    triggerCongratulationFlash();
-                }
-            }, 1000);
-        }
-
-        // Init stats and notes on load
-        renderFocusStats();
-        renderSavedNotes();
     </script>
 </body>
 </html>
