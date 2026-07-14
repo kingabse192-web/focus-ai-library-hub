@@ -656,24 +656,16 @@
         let currentTrackIndex = 0;
         let progressInterval = null;
 
-        // Auto-fallback if YouTube doesn't load within 6 seconds
-        setTimeout(() => {
-            if (!isYTApiReady) {
-                document.getElementById('current-track-title').textContent = tracks[0]?.title + " (Offline Mode)";
-                try {
-                    initAudioCtx();
-                } catch(e) {}
-                updateCassetteUI();
-            }
-        }, 6000);
-
-        // Init audio context and fallback on first user tap anywhere
+        // Init audio context on first user click (required by browsers)
         document.addEventListener('click', () => {
-            if (!isYTApiReady) {
-                useFallbackAudio();
-                updateCassetteUI();
-            } else {
-                try { initAudioCtx(); } catch(e) {}
+            if (!sharedAudioCtx) {
+                try {
+                    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioCtxInitialized = true;
+                } catch(e) {}
+            }
+            if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+                sharedAudioCtx.resume();
             }
         }, { once: true });
 
@@ -849,7 +841,7 @@
             updateCassetteUI();
         }
 
-        // --- FALLBACK AUDIO ENGINE (When YouTube fails - generates lo-fi tones) ---
+        // --- FALLBACK AUDIO ENGINE (Primary audio - YouTube is unreliable) ---
         let sharedAudioCtx = null;
         let fallbackOscillators = [];
         let fallbackGain = null;
@@ -857,23 +849,45 @@
         let fallbackInterval = null;
         let audioCtxInitialized = false;
 
-        function initAudioCtx() {
-            if (audioCtxInitialized && sharedAudioCtx) return sharedAudioCtx;
-            sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtxInitialized = true;
-            return sharedAudioCtx;
+        function getFallbackPattern(idx) {
+            const patterns = [
+                [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66], // C major - misery
+                [293.66, 329.63, 349.23, 392.00, 440.00, 392.00, 349.23, 329.63], // D - night we met
+                [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 329.63], // C arp - blue
+                [220.00, 261.63, 293.66, 329.63, 293.66, 261.63, 220.00, 261.63], // A - fall in love
+                [196.00, 220.00, 261.63, 293.66, 330.00, 293.66, 261.63, 220.00], // G - rainy cafe
+                [246.94, 293.66, 369.99, 440.00, 369.99, 293.66, 246.94, 293.66], // B - waltz
+                [233.08, 261.63, 311.13, 349.23, 311.13, 261.63, 233.08, 261.63], // Bb - favorite
+                [207.65, 261.63, 311.13, 415.30, 311.13, 261.63, 207.65, 261.63], // G# - so what
+                [174.61, 220.00, 261.63, 329.63, 261.63, 220.00, 174.61, 220.00], // F - take five
+                [196.00, 233.08, 277.18, 349.23, 277.18, 233.08, 196.00, 233.08], // G - valentine
+                [261.63, 329.63, 415.30, 523.25, 415.30, 329.63, 261.63, 329.63], // C - look good
+                [200.00, 250.00, 300.00, 450.00, 300.00, 250.00, 200.00, 250.00], // tell me why
+                [180.00, 270.00, 360.00, 480.00, 360.00, 270.00, 180.00, 270.00], // temporary
+                [150.00, 200.00, 250.00, 300.00, 250.00, 200.00, 150.00, 200.00], // death bed
+                [220.00, 330.00, 440.00, 550.00, 440.00, 330.00, 220.00, 330.00], // je te laisserai
+                [261.63, 293.66, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66]  // take me moon
+            ];
+            return patterns[idx % patterns.length];
         }
 
         function useFallbackAudio() {
-            if (fallbackIsPlaying) return;
             try {
-                const ctx = initAudioCtx();
-                if (ctx.state === 'suspended') ctx.resume();
+                if (!sharedAudioCtx) {
+                    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioCtxInitialized = true;
+                }
+                if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+
+                if (fallbackIsPlaying) {
+                    stopFallbackAudio();
+                }
 
                 if (!fallbackGain) {
-                    fallbackGain = ctx.createGain();
-                    fallbackGain.gain.setValueAtTime(0.15, ctx.currentTime);
-                    fallbackGain.connect(ctx.destination);
+                    fallbackGain = sharedAudioCtx.createGain();
+                    const vol = parseFloat(document.getElementById('audio-volume').value) * 0.3;
+                    fallbackGain.gain.setValueAtTime(Math.max(0.01, vol), sharedAudioCtx.currentTime);
+                    fallbackGain.connect(sharedAudioCtx.destination);
                 }
 
                 fallbackIsPlaying = true;
@@ -881,16 +895,16 @@
                 updateCassetteUI();
                 startVisualTapeTrack();
 
-                const lofiNotes = [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66];
+                const lofiNotes = getFallbackPattern(currentTrackIndex);
                 let noteIndex = 0;
 
                 function playNextNote() {
-                    if (!fallbackIsPlaying || !ctx) return;
-                    const osc = ctx.createOscillator();
-                    const noteGain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], ctx.currentTime);
-                    const now = ctx.currentTime;
+                    if (!fallbackIsPlaying || !sharedAudioCtx) return;
+                    const osc = sharedAudioCtx.createOscillator();
+                    const noteGain = sharedAudioCtx.createGain();
+                    osc.type = currentTrackIndex % 3 === 0 ? 'triangle' : (currentTrackIndex % 3 === 1 ? 'sine' : 'sawtooth');
+                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], sharedAudioCtx.currentTime);
+                    const now = sharedAudioCtx.currentTime;
                     noteGain.gain.setValueAtTime(0.5, now);
                     noteGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
                     osc.connect(noteGain);
@@ -901,10 +915,11 @@
                     noteIndex++;
                 }
 
-                const tempo = Math.max(400, 600 - (currentTrackIndex * 30));
+                const tempo = Math.max(350, 600 - (currentTrackIndex * 20));
                 playNextNote();
                 fallbackInterval = setInterval(playNextNote, tempo);
-                document.getElementById('current-track-title').textContent = (tracks[currentTrackIndex]?.title || 'Track') + " (Fallback Audio)";
+                const trackLabel = tracks[currentTrackIndex]?.title || 'Track';
+                document.getElementById('current-track-title').textContent = trackLabel;
             } catch (e) {
                 console.warn("Fallback audio failed:", e);
             }
@@ -928,12 +943,15 @@
 
         function playAnalogCrackle() {
             try {
-                const ctx = initAudioCtx();
+                if (!sharedAudioCtx || !audioCtxInitialized) {
+                    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioCtxInitialized = true;
+                }
                 if (!crackleNode) {
-                    crackleGain = ctx.createGain();
+                    crackleGain = sharedAudioCtx.createGain();
 
-                    const bufferSize = ctx.sampleRate * 2;
-                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const bufferSize = sharedAudioCtx.sampleRate * 2;
+                    const buffer = sharedAudioCtx.createBuffer(1, bufferSize, sharedAudioCtx.sampleRate);
                     const data = buffer.getChannelData(0);
 
                     for (let i = 0; i < bufferSize; i++) {
@@ -942,24 +960,24 @@
                         data[i] = whiteNoise * 0.035 + cracklePop;
                     }
 
-                    const source = ctx.createBufferSource();
+                    const source = sharedAudioCtx.createBufferSource();
                     source.buffer = buffer;
                     source.loop = true;
 
-                    const biquadFilter = ctx.createBiquadFilter();
+                    const biquadFilter = sharedAudioCtx.createBiquadFilter();
                     biquadFilter.type = "bandpass";
-                    biquadFilter.frequency.setValueAtTime(1200, ctx.currentTime);
-                    biquadFilter.Q.setValueAtTime(1.0, ctx.currentTime);
+                    biquadFilter.frequency.setValueAtTime(1200, sharedAudioCtx.currentTime);
+                    biquadFilter.Q.setValueAtTime(1.0, sharedAudioCtx.currentTime);
 
                     source.connect(biquadFilter);
                     biquadFilter.connect(crackleGain);
-                    crackleGain.connect(ctx.destination);
+                    crackleGain.connect(sharedAudioCtx.destination);
                     source.start();
                     crackleNode = source;
                 }
 
-                if (ctx.state === 'suspended') ctx.resume();
-                crackleGain.gain.setValueAtTime(0.2 * 0.45, ctx.currentTime);
+                if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+                crackleGain.gain.setValueAtTime(0.2 * 0.45, sharedAudioCtx.currentTime);
             } catch (e) {
                 console.warn("Unable to start cassette tape deck crackle node:", e);
             }
@@ -1106,20 +1124,14 @@
         }
 
         playPauseTapeBtn.addEventListener('click', () => {
-            if (!isYTApiReady) {
-                useFallbackAudio();
-                return;
-            }
-            if (isPlaying) {
-                ytPlayer.pauseVideo();
+            if (isPlaying && fallbackIsPlaying) {
+                stopFallbackAudio();
                 isPlaying = false;
                 stopVisualTapeTrack();
-            } else {
-                ytPlayer.playVideo();
-                isPlaying = true;
-                startVisualTapeTrack();
+                updateCassetteUI();
+                return;
             }
-            updateCassetteUI();
+            useFallbackAudio();
         });
 
         nextTapeBtn.addEventListener('click', () => {
