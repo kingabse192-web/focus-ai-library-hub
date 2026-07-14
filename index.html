@@ -1765,7 +1765,9 @@ But don't worry, here are some ways to keep studying:
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    const errBody = await response.json().catch(() => ({}));
+                    const errMsg = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(errMsg);
                 }
 
                 const result = await response.json();
@@ -1785,19 +1787,24 @@ But don't worry, here are some ways to keep studying:
             } catch (err) {
                 console.warn("API call fell back to local reasoning module...", err);
                 removeTypingIndicator();
-                
-                if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
+
+                const errText = err?.message || '';
+                if (errText.includes('quota') || errText.includes('RESOURCE_EXHAUSTED') || errText.includes('429')) {
+                    appendMessageBubble('ai', `⚠️ **Gemini API quota exceeded.** Your free tier ran out of requests for now. Try again in about a minute — the quota resets automatically.
+
+Until then, ask me about topics like *"what is an animal"*, *"explain photosynthesis"*, or *"study tips"* for instant offline answers! 🎧`);
+                } else if (errText.includes('API_KEY_INVALID') || errText.includes('invalid') || errText.includes('403') || errText.includes('not found')) {
+                    appendMessageBubble('ai', `🔑 **Your Gemini API key is not working.** 
+
+1. Click the **Settings Gear** ⚙️ at the top right.
+2. Go to https://aistudio.google.com/apikey and get a free key.
+3. Paste it and save.
+
+Or ask offline questions like *"what is an animal"* for instant answers!`);
+                } else if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
                     appendMessageBubble('ai', LOCAL_OFFLINE_BRAIN[normalizedQuery]);
                 } else {
-                    const fallbackText = `I ran into a connection block while trying to reach the network. 
-
-To resolve this on local environments like the one in **Capture.PNG**:
-1. Click the **Settings Gear** ⚙️ at the top right of this chat box.
-2. Paste your Gemini API key in the entry box and save it.
-3. This safely bypasses browser origin restrictions and lets the live assistant work seamlessly!
-
-Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish this study session strong! 👊✨`;
-                    appendMessageBubble('ai', fallbackText);
+                    appendMessageBubble('ai', `I couldn't reach the Gemini API right now. Let me help offline instead! Ask me about *"what is an animal"*, *"explain photosynthesis"*, or *"study tips"* for instant answers! 🎧`);
                 }
             }
         }
