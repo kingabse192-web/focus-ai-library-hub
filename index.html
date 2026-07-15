@@ -1481,7 +1481,9 @@ But don't worry, here are some ways to keep studying:
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    const errBody = await response.json().catch(() => ({}));
+                    const errMsg = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(errMsg);
                 }
 
                 const result = await response.json();
@@ -1499,20 +1501,15 @@ But don't worry, here are some ways to keep studying:
                 appendMessageBubble('ai', aiResponseText);
 
             } catch (err) {
-                console.warn("API call fell back to local reasoning module...", err);
+                console.warn("API call failed:", err);
                 removeTypingIndicator();
-                
+
                 if (LOCAL_OFFLINE_BRAIN[normalizedQuery]) {
                     appendMessageBubble('ai', LOCAL_OFFLINE_BRAIN[normalizedQuery]);
                 } else {
-                    const fallbackText = `I ran into a connection block while trying to reach the network. 
+                    const fallbackText = `**Error**: ${err.message}
 
-To resolve this on local environments like the one in **Capture.PNG**:
-1. Click the **Settings Gear** ⚙️ at the top right of this chat box.
-2. Paste your Gemini API key in the entry box and save it.
-3. This safely bypasses browser origin restrictions and lets the live assistant work seamlessly!
-
-Otherwise, let's play some lo-fi tracks on our cassette tape deck and finish this study session strong! 👊✨`;
+Check your API key in Settings (⚙️) — it may be invalid or out of quota. Or paste a new key directly.`;
                     appendMessageBubble('ai', fallbackText);
                 }
             }
