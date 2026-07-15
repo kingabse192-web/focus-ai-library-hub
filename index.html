@@ -857,15 +857,11 @@
 
         function onPlayerError(event) {
             console.warn("YouTube player error:", event.data);
-            if (event.data === 100 || event.data === 101 || event.data === 150) {
-                useFallbackAudio();
-            }
         }
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.PLAYING) {
                 isPlaying = true;
-                stopFallbackAudio();
                 startVisualTapeTrack();
             } else if (event.data === YT.PlayerState.CUED) {
             } else {
@@ -873,70 +869,6 @@
                 stopVisualTapeTrack();
             }
             updateCassetteUI();
-        }
-
-        // --- FALLBACK AUDIO ENGINE (When YouTube fails - generates lo-fi tones) ---
-        let fallbackCtx = null;
-        let fallbackOscillators = [];
-        let fallbackGain = null;
-        let fallbackIsPlaying = false;
-        let fallbackInterval = null;
-
-        function useFallbackAudio() {
-            if (fallbackIsPlaying) return;
-            try {
-                if (!fallbackCtx) {
-                    fallbackCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    fallbackGain = fallbackCtx.createGain();
-                    fallbackGain.gain.setValueAtTime(0.08, fallbackCtx.currentTime);
-                    fallbackGain.connect(fallbackCtx.destination);
-                }
-                if (fallbackCtx.state === 'suspended') fallbackCtx.resume();
-
-                fallbackIsPlaying = true;
-                isPlaying = true;
-                updateCassetteUI();
-                startVisualTapeTrack();
-
-                const lofiNotes = [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66];
-                let noteIndex = 0;
-
-                function playNextNote() {
-                    if (!fallbackIsPlaying || !fallbackCtx) return;
-                    const osc = fallbackCtx.createOscillator();
-                    const noteGain = fallbackCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(lofiNotes[noteIndex % lofiNotes.length], fallbackCtx.currentTime);
-                    const now = fallbackCtx.currentTime;
-                    noteGain.gain.setValueAtTime(0.3, now);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-                    osc.connect(noteGain);
-                    noteGain.connect(fallbackGain);
-                    osc.start(now);
-                    osc.stop(now + 1.2);
-                    fallbackOscillators.push(osc);
-                    noteIndex++;
-                }
-
-                const tempo = Math.max(400, 600 - (currentTrackIndex * 30));
-                playNextNote();
-                fallbackInterval = setInterval(playNextNote, tempo);
-                document.getElementById('current-track-title').textContent = tracks[currentTrackIndex]?.title + " (Fallback Audio)";
-            } catch (e) {
-                console.warn("Fallback audio failed:", e);
-            }
-        }
-
-        function stopFallbackAudio() {
-            fallbackIsPlaying = false;
-            if (fallbackInterval) {
-                clearInterval(fallbackInterval);
-                fallbackInterval = null;
-            }
-            fallbackOscillators.forEach(osc => {
-                try { osc.stop(); } catch(e) {}
-            });
-            fallbackOscillators = [];
         }
 
         // --- RETRO TAPE ANALOG NOISE GENERATOR (Runs parallel to the real YouTube music) ---
@@ -1335,7 +1267,7 @@
         })();
         if (customGeminiKey) {
             customApiKeyInput.value = customGeminiKey;
-            modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
+            modelNameIndicator.textContent = "GEMINI-2.0-FLASH (LIVE)";
         } else {
             modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
         }
@@ -1346,7 +1278,7 @@
             customGeminiKey = keyVal;
             apiKeyPanel.classList.add('hidden');
             if (keyVal) {
-                modelNameIndicator.textContent = "GEMINI-3-FLASH-PREVIEW (LIVE)";
+                modelNameIndicator.textContent = "GEMINI-2.0-FLASH (LIVE)";
             } else {
                 modelNameIndicator.textContent = "GEMINI ENGINE LIVE";
             }
