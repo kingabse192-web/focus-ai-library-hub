@@ -1225,24 +1225,6 @@
 
         powerToggleBtn.addEventListener('click', toggleThemeMode);
 
-        // --- FOCUS MODE TOGGLE ---
-        const focusModeBtn = document.getElementById('focus-mode-btn');
-        const focusExitBtn = document.getElementById('focus-exit-btn');
-        let isFocusMode = false;
-
-        function toggleFocusMode() {
-            isFocusMode = !isFocusMode;
-            document.body.classList.toggle('focus-mode', isFocusMode);
-            focusExitBtn.classList.toggle('hidden', !isFocusMode);
-            document.getElementById('focus-text').textContent = isFocusMode ? 'Exit Focus' : 'Focus';
-        }
-
-        focusModeBtn.addEventListener('click', toggleFocusMode);
-        focusExitBtn.addEventListener('click', toggleFocusMode);
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isFocusMode) toggleFocusMode();
-        });
-
         function triggerCongratulationFlash() {
             toggleThemeMode();
             setTimeout(() => {
@@ -1330,7 +1312,9 @@
         const suggestionsGrid = document.getElementById('suggestions-grid');
         const searchCheckbox = document.getElementById('search-grounding-checkbox');
         const focusModeBtn = document.getElementById('focus-mode-btn');
-        const focusModeText = document.getElementById('focus-mode-text');
+        const focusModeText = document.getElementById('focus-text');
+        const focusExitBtn = document.getElementById('focus-exit-btn');
+        let isFocusMode = false;
         
         const apiSettingsBtn = document.getElementById('api-settings-btn');
         const apiKeyPanel = document.getElementById('api-key-panel');
@@ -1369,15 +1353,23 @@
         });
 
         focusModeBtn.addEventListener('click', () => {
-            isChatExpandedFocus = !isChatExpandedFocus;
-            if (isChatExpandedFocus) {
-                leftColumn.style.display = 'none';
-                focusModeText.textContent = "Exit Focus";
-                focusModeBtn.innerHTML = `<i class="fa-solid fa-compress text-[10px]"></i> <span id="focus-mode-text">Exit Focus</span>`;
-            } else {
-                leftColumn.style.display = 'flex';
-                focusModeText.textContent = "Expand Focus";
-                focusModeBtn.innerHTML = `<i class="fa-solid fa-expand text-[10px]"></i> <span id="focus-mode-text">Expand Focus</span>`;
+            isFocusMode = !isFocusMode;
+            document.body.classList.toggle('focus-mode', isFocusMode);
+            focusExitBtn.classList.toggle('hidden', !isFocusMode);
+            focusModeText.textContent = isFocusMode ? 'Exit Focus' : 'Focus';
+        });
+        focusExitBtn.addEventListener('click', () => {
+            isFocusMode = false;
+            document.body.classList.remove('focus-mode');
+            focusExitBtn.classList.add('hidden');
+            focusModeText.textContent = 'Focus';
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isFocusMode) {
+                isFocusMode = false;
+                document.body.classList.remove('focus-mode');
+                focusExitBtn.classList.add('hidden');
+                focusModeText.textContent = 'Focus';
             }
         });
 
